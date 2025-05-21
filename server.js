@@ -3,6 +3,7 @@ const express = require('express')
 const app = express()
 const http = require('http')
 const server = http.createServer(app)
+const path = require('path')
 
 const createError = require('http-errors')
 const nunjucks = require('nunjucks')
@@ -20,16 +21,22 @@ const db = require('./config/keys').MongoURI
 mongoose.connect(db, { useUnifiedTopology: true, useNewUrlParser: true })
 
 app.set('view engine', 'nunjucks')
-nunjucks.configure('views', {
+
+// determine absolute path to your views folder
+const viewsPath = path.join(__dirname, 'views')
+
+// configure Nunjucks
+const njEnv = nunjucks.configure(viewsPath, {
   autoescape: true,
-  express: app
+  express:    app,
+  watch:      process.env.NODE_ENV !== 'production'
 })
 
+// register .html so you can keep your existing filenames
+app.engine('html', njEnv.render)
+app.set('view engine', 'html')
+app.set('views', viewsPath)
 // console.log(process.env.GOOGLE_CALLBACK_URL)
-
-// view engine setup
-app.set('views', 'views')
-// app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.static('public'))
 app.use(
@@ -77,7 +84,8 @@ app.use(function (err, req, res, next) {
   res.render('error')
 })
 
-server.listen(9060, () => {
-  console.log('listening on http://localhost:9060')
+const PORT = process.env.PORT || 9060
+
+server.listen(PORT, () => {
+  console.log(`listening on http://localhost:${PORT}`)
 })
-// module.exports = app;
