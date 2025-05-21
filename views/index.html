@@ -5,8 +5,8 @@
     <div class="container">
       <div class="row align-items-center justify-content-center text-left">
         <div class="col-lg-7">
-          <h4>Foreign currency exchange rates<br><span>The Forex rates API</span></h4>
-          <p class="description pe-5">The Forex API is a free service for current and historical foreign exchange rates built on top of data published by <a class="link" href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank"> European Central Bank.</a> The Forex API is compatible with any application and programming languages.</p>
+          <h4>Foreign currency exchange rates<br><span>The rates API</span></h4>
+          <p class="description pe-5">The Rates API is a free service for current and historical foreign exchange rates built on top of data published by <a class="link" href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank"> European Central Bank.</a> The Rates API is compatible with any application and programming languages.</p>
           <a title="API Documentation" class="button btn primary_btn mt-3" href="documentation/">View Full Documentation</a>
         </div>
 
@@ -97,7 +97,6 @@
 {% endblock %}
 {% block extra_js %}
 <script type="text/javascript">
- document.getElementById("weekly_requests_count").innerHTML = Math.floor(Math.random() * (1000-100+1) + 100);
   $(document).ready(function(e){
     var url = '/api/latest';
     $.ajax({
@@ -120,7 +119,7 @@
             a["rates"][k] = "..."
           }
         })
-        document.getElementById("json").innerHTML = "GET https://theforexapi.com/api/latest<br>" + JSON.stringify(a, undefined, 2);
+        document.getElementById("json").innerHTML = "GET https://theratesapi.com/api/latest<br>" + JSON.stringify(a, undefined, 2);
          }
      })
   });
