@@ -1,4 +1,4 @@
-MONGO_URI=""
+MONGO_URI="mongodb://localhost:27017/theratesapi"
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 GOOGLE_CALLBACK_URL=""

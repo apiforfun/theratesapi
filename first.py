@@ -4,6 +4,8 @@ client = MongoClient('mongodb://localhost:27017/')
 db = client['theratesapi']
 collection = db['currency']
 
+collection.drop()
+
 currencies = ['USD', 'JPY', 'BGN', 'CYP', 'CZK', 'DKK', 'EEK', 'GBP', 'HUF', 'LTL', 'LVL', 'MTL', 'PLN', 'ROL', 'RON', 'SEK', 'SIT', 'SKK', 'CHF', 'ISK', 'NOK', 'HRK', 'RUB', 'TRL', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
 
 def calculate_new_base(new_base, new_row):
@@ -18,8 +20,8 @@ def calculate_new_base(new_base, new_row):
             new_curr['rates'][x] = float(new_row['rates'][x])/float(new_row['rates'][new_base])
     
     collection.insert_one(new_curr)
-    print(new_curr)
-    print('baaaaaaaaaaaaaaaaaaaaaaaaaaaaaase', new_base)
+    # print(new_curr)
+    print('base', new_base)
 
 
 with open('../eurofxref-hist.csv', newline='') as csvfile:
@@ -43,12 +45,12 @@ with open('../eurofxref-hist.csv', newline='') as csvfile:
 
         new_row['base'] = 'EUR'
 
-        print(new_row)
+        # print(new_row)
         for k in new_row['rates'].keys():
             if k not in ('date', 'base'):
                 calculate_new_base(k, new_row)
         
         collection.insert_one(new_row)
 
-        print(new_row)
+        # print(new_row)
 
