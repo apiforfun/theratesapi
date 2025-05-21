@@ -4,7 +4,7 @@ const db = require('../config/keys').MongoURI
 
 async function latestData(req, res, next) {
   MongoClient.connect(db, { useUnifiedTopology: true }, async function (err, dbo) {
-    const db = dbo.db('theforexapi')
+    const db = dbo.db('theratesapi')
     const collection = db.collection('currency')
     fields = { base: 1, date: 1, _id: 0, rates: 1 }
     query = { base: 'EUR' }
@@ -50,7 +50,7 @@ async function dateData(req, res, next) {
   }
   dateParam = dateParmsSplit.join("-")
   MongoClient.connect(db, async function (err, dbo) {
-    const db = dbo.db('theforexapi')
+    const db = dbo.db('theratesapi')
     const collection = db.collection('currency')
     fields = { base: 1, date: 1, _id: 0, rates: 1 }
     query = { base: 'EUR', 'date': { $lte: dateParam } }

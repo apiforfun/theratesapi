@@ -78,6 +78,6 @@ app.use(function (err, req, res, next) {
 })
 
 server.listen(9060, () => {
-  console.log('listening on *:9060')
+  console.log('listening on http://localhost:9060')
 })
 // module.exports = app;

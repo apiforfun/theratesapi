@@ -1,7 +1,7 @@
 import csv
 from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017/')
-db = client['theforexapi']
+db = client['theratesapi']
 collection = db['currency']
 
 currencies = ['USD', 'JPY', 'BGN', 'CYP', 'CZK', 'DKK', 'EEK', 'GBP', 'HUF', 'LTL', 'LVL', 'MTL', 'PLN', 'ROL', 'RON', 'SEK', 'SIT', 'SKK', 'CHF', 'ISK', 'NOK', 'HRK', 'RUB', 'TRL', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
@@ -14,7 +14,7 @@ def calculate_new_base(new_base, new_row):
     new_curr['rates']={}
     new_curr['rates']['EUR']=1/float(new_row['rates'][new_base])
     for x in currencies:
-        if x in new_row['rates'].keys() and x is not new_base:
+        if x in new_row['rates'].keys() and x != new_base:
             new_curr['rates'][x] = float(new_row['rates'][x])/float(new_row['rates'][new_base])
     
     collection.insert_one(new_curr)
@@ -51,14 +51,4 @@ with open('../eurofxref-hist.csv', newline='') as csvfile:
         collection.insert_one(new_row)
 
         print(new_row)
-
-        # break
-
-
-# new_base = 'USD'
-# base = 'EUR'
-
-# target_currency = 'JPY'
-# target_currency_value = target/new_base
-
 
