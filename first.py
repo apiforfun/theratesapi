@@ -13,11 +13,11 @@ def calculate_new_base(new_base, new_row):
         'date': new_row['date'],
         'base': new_base,
     }
-    new_curr['rates']={}
-    new_curr['rates']['EUR']=1/float(new_row['rates'][new_base])
+    new_curr['rates'] = {}
+    new_curr['rates']['EUR'] = round(1 / float(new_row['rates'][new_base]), 6)
     for x in currencies:
         if x in new_row['rates'].keys() and x != new_base:
-            new_curr['rates'][x] = float(new_row['rates'][x])/float(new_row['rates'][new_base])
+            new_curr['rates'][x] = round(float(new_row['rates'][x]) / float(new_row['rates'][new_base]), 6)
     
     collection.insert_one(new_curr)
     # print(new_curr)
