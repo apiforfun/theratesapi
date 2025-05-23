@@ -1,5 +1,8 @@
 import csv
 from pymongo import MongoClient
+from decimal import Decimal, ROUND_HALF_UP, getcontext
+from bson.decimal128 import Decimal128
+
 client = MongoClient('mongodb://localhost:27017/')
 db = client['theratesapi']
 collection = db['currency']
@@ -8,17 +11,22 @@ collection.drop()
 
 currencies = ['USD', 'JPY', 'BGN', 'CYP', 'CZK', 'DKK', 'EEK', 'GBP', 'HUF', 'LTL', 'LVL', 'MTL', 'PLN', 'ROL', 'RON', 'SEK', 'SIT', 'SKK', 'CHF', 'ISK', 'NOK', 'HRK', 'RUB', 'TRL', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
 
+getcontext().prec = 28  # set high precision for intermediate calculations
+DECIMAL_PLACES = Decimal('0.000001')  # 6 digits after decimal point
+
 def calculate_new_base(new_base, new_row):
     new_curr = {
         'date': new_row['date'],
         'base': new_base,
     }
     new_curr['rates'] = {}
-    new_curr['rates']['EUR'] = round(1 / float(new_row['rates'][new_base]), 6)
+    # Use Decimal for calculations and quantize for 6 digits after decimal
+    new_curr['rates']['EUR'] = float((Decimal('1') / Decimal(new_row['rates'][new_base])).quantize(DECIMAL_PLACES, rounding=ROUND_HALF_UP))
     for x in currencies:
         if x in new_row['rates'].keys() and x != new_base:
-            new_curr['rates'][x] = round(float(new_row['rates'][x]) / float(new_row['rates'][new_base]), 6)
-    
+            value = (Decimal(new_row['rates'][x]) / Decimal(new_row['rates'][new_base])).quantize(DECIMAL_PLACES, rounding=ROUND_HALF_UP)
+            # new_curr['rates'][x] = float(value)
+            new_curr['rates'][x] = Decimal128(value)
     collection.insert_one(new_curr)
     # print(new_curr)
     print('base', new_base)
