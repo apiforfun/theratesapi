@@ -7,7 +7,7 @@ client = MongoClient('mongodb://localhost:27017/')
 db = client['theratesapi']
 collection = db['currency']
 
-collection.drop()
+collection.drop()  # Comment out this line to update missing data because of any reason.
 
 currencies = ['USD', 'JPY', 'BGN', 'CYP', 'CZK', 'DKK', 'EEK', 'GBP', 'HUF', 'LTL', 'LVL', 'MTL', 'PLN', 'ROL', 'RON', 'SEK', 'SIT', 'SKK', 'CHF', 'ISK', 'NOK', 'HRK', 'RUB', 'TRL', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
 
@@ -27,6 +27,12 @@ def calculate_new_base(new_base, new_row):
             value = (Decimal(new_row['rates'][x]) / Decimal(new_row['rates'][new_base])).quantize(DECIMAL_PLACES, rounding=ROUND_HALF_UP)
             # new_curr['rates'][x] = float(value)
             new_curr['rates'][x] = Decimal128(value)
+    
+    # Check for duplicate before insert
+    if collection.find_one({'date': new_curr['date'], 'base': new_base}):
+        print(f"Skipped duplicate for {new_curr['date']} base {new_base}")
+        return
+    
     collection.insert_one(new_curr)
     # print(new_curr)
     print('base', new_base)
@@ -57,6 +63,11 @@ with open('../eurofxref-hist.csv', newline='') as csvfile:
         for k in new_row['rates'].keys():
             if k not in ('date', 'base'):
                 calculate_new_base(k, new_row)
+        
+        # Check for duplicate before insert
+        if collection.find_one({'date': new_row['date'], 'base': 'EUR'}):
+            print(f"Skipped duplicate for {new_row['date']} base EUR")
+            continue
         
         collection.insert_one(new_row)
 
