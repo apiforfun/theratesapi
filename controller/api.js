@@ -6,21 +6,21 @@ async function latestData(req, res, next) {
   MongoClient.connect(db, { useUnifiedTopology: true }, async function (err, dbo) {
     const db = dbo.db('theratesapi')
     const collection = db.collection('currency')
-    fields = { base: 1, date: 1, _id: 0, rates: 1 }
-    query = { base: 'EUR' }
+    let fields = { base: 1, date: 1, _id: 0, rates: 1 }
+    let query = { base: 'EUR' }
 
     if (req.query.base) {
       query = { base: req.query.base.toUpperCase() }
     }
     if (req.query.symbols) {
       fields = { base: 1, date: 1, _id: 0 }
-      symbols = req.query.symbols.split(',')
-      for (each in symbols) {
-        symbol = 'rates.' + symbols[each].toUpperCase()
-        fields[symbol] = 1
+      const symbols = req.query.symbols.split(',')
+      for (const symbol of symbols) {
+        const fieldName = 'rates.' + symbol.toUpperCase()
+        fields[fieldName] = 1
       }
     }
-    const cursor = await collection.find(query, { fields: fields }).sort({ date: -1 }).limit(1).toArray(function (err, result) {
+    const cursor = await collection.find(query, { projection: fields }).sort({ date: -1 }).limit(1).toArray(function (err, result) {
       if (err) throw err
       dbo.close()
       if (result[0]) {
@@ -40,8 +40,8 @@ async function latestData(req, res, next) {
 }
 
 async function dateData(req, res, next) {
-  dateParam = req.params.dateParam
-  dateParmsSplit = dateParam.split('-')
+  let dateParam = req.params.dateParam
+  const dateParmsSplit = dateParam.split('-')
   if(dateParmsSplit[1].length === 1) {
     dateParmsSplit[1] = '0'+dateParmsSplit[1]
   } 
@@ -52,20 +52,20 @@ async function dateData(req, res, next) {
   MongoClient.connect(db, async function (err, dbo) {
     const db = dbo.db('theratesapi')
     const collection = db.collection('currency')
-    fields = { base: 1, date: 1, _id: 0, rates: 1 }
-    query = { base: 'EUR', 'date': { $lte: dateParam } }
+    let fields = { base: 1, date: 1, _id: 0, rates: 1 }
+    let query = { base: 'EUR', 'date': { $lte: dateParam } }
     if (req.query.base) {
       query.base = req.query.base.toUpperCase()
     }
     if (req.query.symbols) {
       fields = { base: 1, date: 1, _id: 0 }
-      symbols = req.query.symbols.split(',')
-      for (each in symbols) {
-        symbol = 'rates.' + symbols[each].toUpperCase()
-        fields[symbol] = 1
+      const symbols = req.query.symbols.split(',')
+      for (const symbol of symbols) {
+        const fieldName = 'rates.' + symbol.toUpperCase()
+        fields[fieldName] = 1
       }
     }
-    const cursor = await collection.find(query, { fields: fields }).sort({ date: -1 }).toArray(async function (err, result) {
+    const cursor = await collection.find(query, { projection: fields }).sort({ date: -1 }).limit(1).toArray(async function (err, result) {
       if (err) {
         throw err
       }
