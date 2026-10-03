@@ -1,75 +1,66 @@
-const mongoose = require('mongoose')
+const db = require('../config/db')
 
-async function latestData(req, res, next) {
-  const db = mongoose.connection.db
-  const collection = db.collection('currency')
-  let fields = { base: 1, date: 1, _id: 0, rates: 1 }
-  let query = { base: 'EUR' }
+// Rates for $1 (base) on the newest ECB publication day on or before $2 (null = latest)
+// on which that base was published. ECB rates are units per 1 EUR, so EUR is added as 1
+// and every cross-rate is target / base, rounded half-up to 6 decimals. $1 is compared as
+// bpchar so the (currency, date) index applies; to_char keeps the date ISO whatever DateStyle is.
+const RATES_SQL = `
+WITH day AS (
+  SELECT max(date) AS date FROM ecb_rates
+  WHERE ($1::text = 'EUR' OR currency = $1::bpchar)
+    AND date <= coalesce($2::date, 'infinity')
+),
+quotes AS (
+  SELECT r.date, r.currency, r.rate FROM ecb_rates r JOIN day USING (date)
+  UNION ALL
+  SELECT date, 'EUR', 1 FROM day WHERE date IS NOT NULL
+)
+SELECT to_char(q.date, 'YYYY-MM-DD') AS date, q.currency, round(q.rate / b.rate, 6)::text AS rate
+FROM quotes q JOIN quotes b ON b.currency = $1::bpchar
+WHERE q.currency <> $1::bpchar
+ORDER BY q.currency`
 
-  if (req.query.base) {
-    query = { base: req.query.base.toUpperCase() }
+async function sendRates (req, res, next, date) {
+  const base = req.query.base || 'EUR'
+  const symbols = req.query.symbols
+  // Repeated query params arrive as arrays.
+  if (typeof base !== 'string' || (symbols && typeof symbols !== 'string')) {
+    return res.status(400).json({ error: 'Invalid base or symbols' })
   }
-  if (req.query.symbols) {
-    fields = { base: 1, date: 1, _id: 0 }
-    const symbols = req.query.symbols.split(',')
-    for (const symbol of symbols) {
-      fields['rates.' + symbol.toUpperCase()] = 1
-    }
+  if (!/^[A-Z]{3}$/.test(base.toUpperCase())) {
+    return res.status(400).json({ error: 'Invalid base or symbols' })
   }
+  const wanted = symbols ? symbols.toUpperCase().split(',') : null
 
   try {
-    const result = await collection.find(query, { projection: fields }).sort({ date: -1 }).limit(1).toArray()
-    if (result[0]) {
-      const keys = Object.keys(result[0].rates)
-      for (const key of keys) {
-        result[0].rates[key] = parseFloat(result[0].rates[key])
-      }
-      res.json(result[0])
-    } else {
-      res.status(400).json({ error: 'Invalid base or symbols' })
+    const { rows } = await db.query(RATES_SQL, [base.toUpperCase(), date])
+    if (rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid base or symbols' })
     }
+    const rates = {}
+    for (const row of rows) {
+      if (!wanted || wanted.includes(row.currency)) rates[row.currency] = parseFloat(row.rate)
+    }
+    res.json({ date: rows[0].date, base: base.toUpperCase(), rates })
   } catch (err) {
     next(err)
   }
 }
 
-async function dateData(req, res, next) {
-  let dateParam = req.params.dateParam
-  const parts = dateParam.split('-')
-  if (parts[1].length === 1) parts[1] = '0' + parts[1]
-  if (parts[2].length === 1) parts[2] = '0' + parts[2]
-  dateParam = parts.join('-')
+function latestData (req, res, next) {
+  return sendRates(req, res, next, null)
+}
 
-  const db = mongoose.connection.db
-  const collection = db.collection('currency')
-  let fields = { base: 1, date: 1, _id: 0, rates: 1 }
-  let query = { base: 'EUR', date: { $lte: dateParam } }
-
-  if (req.query.base) {
-    query.base = req.query.base.toUpperCase()
+function dateData (req, res, next) {
+  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(req.params.dateParam)
+  const date = match && `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`
+  // new Date rolls 2025-02-30 over to March, so the round trip must match exactly.
+  // Year 0000 is valid in JS but not in Postgres.
+  const parsed = new Date(date)
+  if (!date || match[1] === '0000' || isNaN(parsed) || parsed.toISOString().slice(0, 10) !== date) {
+    return res.status(400).json({ error: 'Invalid date' })
   }
-  if (req.query.symbols) {
-    fields = { base: 1, date: 1, _id: 0 }
-    const symbols = req.query.symbols.split(',')
-    for (const symbol of symbols) {
-      fields['rates.' + symbol.toUpperCase()] = 1
-    }
-  }
-
-  try {
-    const result = await collection.find(query, { projection: fields }).sort({ date: -1 }).limit(1).toArray()
-    if (result[0]) {
-      const keys = Object.keys(result[0].rates)
-      for (const key of keys) {
-        result[0].rates[key] = parseFloat(result[0].rates[key])
-      }
-      res.json(result[0])
-    } else {
-      res.status(400).json({ error: 'Invalid base or symbols' })
-    }
-  } catch (err) {
-    next(err)
-  }
+  return sendRates(req, res, next, date)
 }
 
 module.exports = { latestData, dateData }
