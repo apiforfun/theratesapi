@@ -20,6 +20,18 @@ FROM quotes q JOIN quotes b ON b.currency = $1::bpchar
 WHERE q.currency <> $1::bpchar
 ORDER BY q.currency`
 
+// Resolves to { date, base, rates } or null when the base has no rates on or before date.
+// symbols (upper-case codes, or null for all) limits which rates are returned.
+async function fetchRates (base, date, symbols = null) {
+  const { rows } = await db.query(RATES_SQL, [base, date])
+  if (rows.length === 0) return null
+  const rates = {}
+  for (const row of rows) {
+    if (!symbols || symbols.includes(row.currency)) rates[row.currency] = parseFloat(row.rate)
+  }
+  return { date: rows[0].date, base, rates }
+}
+
 async function sendRates (req, res, next, date) {
   const base = req.query.base || 'EUR'
   const symbols = req.query.symbols
@@ -33,15 +45,13 @@ async function sendRates (req, res, next, date) {
   const wanted = symbols ? symbols.toUpperCase().split(',') : null
 
   try {
-    const { rows } = await db.query(RATES_SQL, [base.toUpperCase(), date])
-    if (rows.length === 0) {
+    const result = await fetchRates(base.toUpperCase(), date, wanted)
+    if (!result) {
       return res.status(400).json({ error: 'Invalid base or symbols' })
     }
-    const rates = {}
-    for (const row of rows) {
-      if (!wanted || wanted.includes(row.currency)) rates[row.currency] = parseFloat(row.rate)
-    }
-    res.json({ date: rows[0].date, base: base.toUpperCase(), rates })
+    // ECB publishes at most once per weekday, so a short shared cache is safe.
+    res.set('Cache-Control', 'public, max-age=300')
+    res.json(result)
   } catch (err) {
     next(err)
   }
@@ -63,4 +73,4 @@ function dateData (req, res, next) {
   return sendRates(req, res, next, date)
 }
 
-module.exports = { latestData, dateData }
+module.exports = { fetchRates, latestData, dateData }

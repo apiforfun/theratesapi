@@ -1,0 +1,13 @@
+{% extends 'pages/base.html' %}
+{% block title %}{% if status == 404 %}Page not found{% else %}Something went wrong{% endif %} | The Rates API{% endblock %}
+{% block container %}
+<section class="page container">
+  {% if status == 404 %}
+  <h1>Page not found</h1>
+  <p>There's nothing at this address. Try the <a href="/">home page</a> or the <a href="/documentation/">documentation</a>.</p>
+  {% else %}
+  <h1>Something went wrong</h1>
+  <p>That's on us. Please try again in a minute, or <a href="https://github.com/apiforfun/theratesapi/issues">report an issue</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,127 +1,69 @@
 {% extends 'pages/base.html' %}
+{% from 'pages/macros.html' import code_example, icon_check %}
 {% block container %}
-<div class="main_container">
-  <div class="hero">
-    <div class="container">
-      <div class="row align-items-center justify-content-center text-left">
-        <div class="col-lg-7">
-          <h4>Foreign currency exchange rates<br><span>The rates API</span></h4>
-          <p class="description pe-5">The Rates API is a free service for current and historical foreign exchange rates built on top of data published by <a class="link" href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank"> European Central Bank.</a> The Rates API is compatible with any application and programming languages.</p>
-          <a title="API Documentation" class="button btn primary_btn mt-3" href="documentation/">View Full Documentation</a>
-        </div>
-
-        <div class="col-lg-5">
-          <div class="code-block">
-            <pre class="col-md-5 m-auto code-base prettyprint prettyprinted" id="json" style="">dummy api</pre>
-          </div>
-        </div>
-
+<section class="hero">
+  <div class="container hero-inner">
+    <div>
+      <h1>Free exchange rates API. <span>No key, no limits.</span></h1>
+      <p class="lead">Current and historical reference rates from the European Central Bank for 30 currencies, every working day since 1999.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="/documentation/">Read the docs</a>
+        <a class="button ghost" href="https://github.com/apiforfun/theratesapi">View on GitHub</a>
       </div>
     </div>
-  </div>
-</div>
-<div class="each-block">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-6">
-         <div class="row count_row">
-          <!--count_block starts here -->
-          <div class="col-lg-6 col-md-6 col-12">
-            <div class="count_block">
-              <div class="name_count">
-                <span class="icon one"><i class="bi bi-arrow-left-right"></i></span>
-                <a class=" counter" id="weekly_requests_count">{{weekly_requests_count}}</a>
-                <p class="text">Requests in last 7 days</p>
-              </div>
-            </div>
-          </div>
-          <!--count_block ends here -->
-          <!--count_block starts here -->
-          <div class="col-lg-6 col-md-6 col-12">
-            <div class="count_block">
-              <div class="name_count">
-                <span class="icon two"><i class="bi bi-speedometer2"></i></span>
-                <a class="counter">100%</a>
-                <p class="text">Response Rate</p>
-              </div>
-            </div>
-          </div>
-          <!--count_block ends here -->
-          <!--count_block starts here -->
-          <div class="col-lg-6 col-md-6 col-12">
-            <div class="count_block no-border">
-              <div class="name_count">
-                <span class="icon three"><i class="bi bi-currency-exchange"></i></span>
-                <a class=" counter">30+</a>
-                <p class="text">Currency</p>
-              </div>
-            </div>
-          </div>
-          <!--count_block ends here -->
-          <!--count_block starts here -->
-          <div class="col-lg-6 col-md-6 col-12">
-            <div class="count_block no-border">
-              <div class="name_count">
-                <span class="icon four"><i class="bi bi-life-preserver"></i></span>
-                <a class=" counter">24/7</a>
-                <p class="text">Availability</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="col-lg-6">
-        <h1>Available Endpoints</h1>
-        <div class="row justify-content-center">
-          <div class="col-md-6 d-flex">
-            <div class="historical card shadow">
-              <i class="bi bi-clock-history history"></i>
-              <h3 class="type">Historical</h3>
-              <p>Historical rate data is available all the way back to  1999s.</p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="current card shadow">
-              <i class="bi bi-record-circle live"></i>
-              <h3 class="type">Current</h3>
-              <p>Dialy data available set of currencies.</p>
-            </div>
-          </div>
-        </div>
+    <form class="try" action="/try" method="get" data-try>
+      <div class="try-controls">
+        <label>Base
+          <select name="base">
+            {% for code in currencies %}<option value="{{ code }}"{% if code == 'EUR' %} selected{% endif %}>{{ code }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Symbols
+          <input name="symbols" value="USD,GBP,JPY" autocomplete="off" spellcheck="false">
+        </label>
+        <label>Date
+          <input type="date" name="date" min="1999-01-04">
+        </label>
+        <button class="button primary" type="submit">Run</button>
       </div>
+      <div class="request">
+        <span class="method">GET</span>
+        <span class="url" data-try-url>https://theratesapi.com/api/latest?symbols=USD,GBP,JPY</span>
+        <button class="copy" type="button" data-copy-from="[data-try-url]">Copy</button>
+      </div>
+      <pre class="json" data-try-output aria-live="polite">{% if example %}{{ example | json }}{% endif %}</pre>
+      <p class="try-status" data-try-status>{% if not example %}Press Run to send a request.{% endif %}</p>
+    </form>
+  </div>
+</section>
+
+<section class="facts" aria-label="Key facts">
+  <ul class="container">
+    <li>{{ icon_check() }} No signup or API key</li>
+    <li>{{ icon_check() }} 30 currencies, any base</li>
+    <li>{{ icon_check() }} History from 1999-01-04</li>
+    <li>{{ icon_check() }} Updated every working day, around 16:00 CET</li>
+  </ul>
+</section>
+
+<section class="endpoints">
+  <div class="container endpoints-inner">
+    <div>
+      <h2>Two endpoints. That's the whole API.</h2>
+      <div class="endpoint">
+        <code>GET /api/latest</code>
+        <p>The newest rates the ECB has published.</p>
+      </div>
+      <div class="endpoint">
+        <code>GET /api/2025-06-02</code>
+        <p>Rates for any day since 1999. Weekends and holidays return the previous working day.</p>
+      </div>
+      <p class="more">Add <code>?base=USD</code> to change the base and <code>?symbols=GBP,JPY</code> to filter. <a href="/documentation/">Read the full reference</a>.</p>
+    </div>
+    <div class="code-panel">
+      {{ code_example('home', 'https://theratesapi.com/api/latest?base=USD&symbols=EUR') }}
     </div>
   </div>
-</div>
-
-{% endblock %}
-{% block extra_js %}
-<script type="text/javascript">
-  $(document).ready(function(e){
-    var url = '/api/latest';
-    $.ajax({
-       type: 'GET',
-       dataType: 'json',
-       accepts: 'application/json',
-       url: '/api/latest',
-       success: function (data) {
-        a = {}
-        a["base"] = data.base
-        a["date"] = data.date
-        a["rates"] = {}
-        var count = 0
-        $.each(data.rates, function(k,d){
-          count = count + 1
-          if ((count) < 8){ 
-            a["rates"][k] = d
-          }
-          if ((count) == 7){ 
-            a["rates"][k] = "..."
-          }
-        })
-        document.getElementById("json").innerHTML = "GET https://theratesapi.com/api/latest<br>" + JSON.stringify(a, undefined, 2);
-         }
-     })
-  });
-</script>
+</section>
 {% endblock %}

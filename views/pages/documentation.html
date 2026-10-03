@@ -1,113 +1,121 @@
 {% extends 'pages/base.html' %}
-
+{% from 'pages/macros.html' import code_example %}
+{% block title %}Documentation | The Rates API{% endblock %}
+{% block description %}How to use The Rates API: latest and historical exchange rates, the base and symbols parameters, errors and supported currencies.{% endblock %}
 {% block container %}
-      <div class="main_container">
-        <div class="container">
-        <h3 class="privacy-policy mt-5">Documentation</h3>
-        <div class="inner_container">
-            <h3>Foreign currency exchange The Rates API with currency conversion</h3>
-            <p>The Rates API is a free service for current and historical foreign exchange rates developed with data published by<a class="link" href="https://web.archive.org/web/20190525121613https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank"> European Central Bank</a></p>
+<nav class="docs-nav" aria-label="Documentation sections">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#latest">Latest rates</a></li>
+    <li><a href="#historical">Historical rates</a></li>
+    <li><a href="#parameters">Parameters</a></li>
+    <li><a href="#errors">Errors</a></li>
+    <li><a href="#currencies">Currencies</a></li>
+    <li><a href="#fair-use">Fair use</a></li>
+  </ul>
+</nav>
 
-            <strong>Fast &amp; Reliable</strong>
-            <p>40ms response time.</p>
+<section class="doc-section" id="overview">
+  <div class="doc-text">
+    <h1>Documentation</h1>
+    <p>The Rates API serves the euro foreign exchange reference rates published by the European Central Bank, plus cross-rates for any other base currency.</p>
+    <ul>
+      <li>Base URL: <code>https://theratesapi.com/api</code></li>
+      <li>No API key or signup. Requests are plain HTTPS <code>GET</code>s and responses are JSON.</li>
+      <li>CORS is open, so you can call it from browser JavaScript on any site.</li>
+      <li>The ECB publishes new rates around 16:00 CET on working days. Rates for other bases are calculated from them and rounded to 6 decimal places.</li>
+    </ul>
+  </div>
+  <div class="doc-code"><div class="doc-code-inner">
+    {{ code_example('overview', 'https://theratesapi.com/api/latest') }}
+  </div></div>
+</section>
 
-            <strong>Programming languages</strong>
-            <p>The Rates API is compatible with all programming languages.</p>
-        </div>
-        <p class="heading mt-5">API - To get latest date data</p>
-          <div class="inner_container">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="latest-tab" data-bs-toggle="tab" data-bs-target="#latest" type="button" role="tab" aria-controls="latest" aria-selected="true">Latest</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="symbols-tab" data-bs-toggle="tab" data-bs-target="#symbols" type="button" role="tab" aria-controls="symbols" aria-selected="false">Symbols</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="base-tab" data-bs-toggle="tab" data-bs-target="#base" type="button" role="tab" aria-controls="base" aria-selected="false">Base</button>
-              </li>
-               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="symbols-base-tab" data-bs-toggle="tab" data-bs-target="#symbols-base" type="button" role="tab" aria-controls="symbols-base" aria-selected="false">Symbols &amp; Base</button>
-              </li>
-            </ul>
-            <div class="tab-content" id="myTabContent">
-              <div class="tab-pane fade show active" id="latest" role="tabpanel" aria-labelledby="latest-tab">
-                <h5>Latest Foreign Exchange rates</h5>
-                <p class="api-description">Get the latest foreign exchange reference rates.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/latest   HTTP/2 </p>
-              </div>
-              <div class="tab-pane fade" id="symbols" role="tabpanel" aria-labelledby="symbols-tab">
-                <h5>Latest Foreign Exchange Rates with Symbols</h5>
-                <p class="api-description">Request specific exchange rates by setting the symbols parameter.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/latest?symbols=USD,GBP   HTTP/2 </p>
-              </div>
-              <div class="tab-pane fade" id="base" role="tabpanel" aria-labelledby="base-tab">
-                <h5>Latest Foreign Exchange Rates with Base</h5>
-                <p class="api-description">Rates are quoted against the Euro by default. Quote against a different currency by setting the base parameter in your request.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/latest?base=USD   HTTP/2 </p>
-              </div>
-              <div class="tab-pane fade" id="symbols-base" role="tabpanel" aria-labelledby="symbols-base-tab">
-                <h5>Latest Foreign Exchange Rates with Symbols and Base</h5>
-                <p class="api-description">Request specific exchange rates by setting the base parameter and symbols parameter in your request.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/latest?base=USD&amp;symbols=GBP   HTTP/2 </p>
-              </div>
-            </div>
-              <!-- Nav tabs -->
+<section class="doc-section" id="latest">
+  <div class="doc-text">
+    <h2>Latest rates</h2>
+    <p><code>GET /api/latest</code> returns the newest day the ECB has published. Before about 16:00 CET that is the previous working day.</p>
+    <p>Add <code>base</code> to quote against another currency and <code>symbols</code> to return only some of them. See <a href="#parameters">Parameters</a>.</p>
+  </div>
+  <div class="doc-code"><div class="doc-code-inner">
+    {{ code_example('latest', 'https://theratesapi.com/api/latest?base=USD&symbols=GBP,JPY', latest) }}
+  </div></div>
+</section>
 
-            </div>
+<section class="doc-section" id="historical">
+  <div class="doc-text">
+    <h2>Historical rates</h2>
+    <p><code>GET /api/YYYY-MM-DD</code> returns the rates for that day, from 1999-01-04 onwards. Single-digit months and days are accepted, so <code>/api/2025-6-2</code> works too.</p>
+    <ul>
+      <li>Weekends and ECB holidays return the previous working day, so check the <code>date</code> field in the response.</li>
+      <li>Future dates return the latest rates.</li>
+    </ul>
+    <p>The same <code>base</code> and <code>symbols</code> parameters apply.</p>
+  </div>
+  <div class="doc-code"><div class="doc-code-inner">
+    {{ code_example('historical', 'https://theratesapi.com/api/2025-06-02?base=USD&symbols=GBP', historical) }}
+  </div></div>
+</section>
 
-        <p class="heading mt-5">API - To get past conversion rates</p>
+<section class="doc-section" id="parameters">
+  <div class="doc-text">
+    <h2>Parameters</h2>
+    <table>
+      <thead><tr><th>Name</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>base</code></td><td>EUR</td><td>Currency to quote rates against. Three-letter code, case-insensitive.</td></tr>
+        <tr><td><code>symbols</code></td><td>all</td><td>Comma-separated currencies to return, for example <code>USD,GBP</code>. Case-insensitive. Unknown codes are skipped.</td></tr>
+      </tbody>
+    </table>
+    <p>Give each parameter at most once; repeating one returns an error.</p>
+  </div>
+  <div class="doc-code"><div class="doc-code-inner">
+    {{ code_example('parameters', 'https://theratesapi.com/api/latest?base=gbp&symbols=usd,inr') }}
+  </div></div>
+</section>
 
+<section class="doc-section" id="errors">
+  <div class="doc-text">
+    <h2>Errors</h2>
+    <p>Errors return HTTP 400 with a JSON body containing <code>error</code>.</p>
+    <table>
+      <thead><tr><th>When</th><th>Status</th><th>Body</th></tr></thead>
+      <tbody>
+        <tr><td>The date isn't a real calendar date in <code>YYYY-MM-DD</code> form</td><td>400</td><td><code>Invalid date</code></td></tr>
+        <tr><td>Unknown <code>base</code>, a date before 1999-01-04, or a repeated parameter</td><td>400</td><td><code>Invalid base or symbols</code></td></tr>
+        <tr><td>Unknown codes in <code>symbols</code></td><td>200</td><td>Those codes are skipped, so <code>rates</code> can be <code>{}</code></td></tr>
+      </tbody>
+    </table>
+    <p>Retired currencies such as <code>CYP</code> (Cypriot pound) still work as <code>base</code> or in <code>symbols</code> for dates when the ECB published them. As the <code>base</code> of <code>/api/latest</code>, they return their last published day.</p>
+  </div>
+  <div class="doc-code"><div class="doc-code-inner">
+    {{ code_example('errors', 'https://theratesapi.com/api/2025-02-30', { "error": "Invalid date" }, 400) }}
+  </div></div>
+</section>
 
-        <div class="inner_container">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="specific-latest-tab" data-bs-toggle="tab" data-bs-target="#specific-latest" type="button" role="tab" aria-controls="specific-latest" aria-selected="true">Date</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="specific-symbols-tab" data-bs-toggle="tab" data-bs-target="#specific-symbols" type="button" role="tab" aria-controls="specific-symbols" aria-selected="false">Symbols</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="specific-base-tab" data-bs-toggle="tab" data-bs-target="#specific-base" type="button" role="tab" aria-controls="specific-base" aria-selected="false">Base</button>
-              </li>
-               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="specific-symbols-base-tab" data-bs-toggle="tab" data-bs-target="#specific-symbols-base" type="button" role="tab" aria-controls="specific-symbols-base" aria-selected="false">Symbols &amp; Base</button>
-              </li>
-            </ul>
-            <div class="tab-content" id="myTabContent">
-              <div class="tab-pane fade show active" id="specific-latest" role="tabpanel" aria-labelledby="specific-latest-tab">
-                <h5>Latest Foreign Exchange rates</h5>
-                <p class="api-description">Get the latest foreign exchange reference rates.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/2025-06-02/   HTTP/2 </p>
-              </div>
-              <div class="tab-pane fade" id="specific-symbols" role="tabpanel" aria-labelledby="specific-symbols-tab">
-                <h5>Latest Foreign Exchange Rates with Symbols</h5>`
-                <p class="api-description">Request specific exchange rates by setting the symbols parameter.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/2025-06-02/?symbols=USD,GBP   HTTP/2 </p>
-              </div>
-              <div class="tab-pane fade" id="specific-base" role="tabpanel" aria-labelledby="specific-base-tab">
-                <h5>Latest Foreign Exchange Rates with Base</h5>
-                <p class="api-description">Rates are quoted against the Euro by default. Quote against a different currency by setting the base parameter in your request.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/2025-06-02/?base=USD   HTTP/2 </p>
-              </div>
-              <div class="tab-pane fade" id="specific-symbols-base" role="tabpanel" aria-labelledby="specific-symbols-base-tab">
-                <h5>Latest Foreign Exchange Rates with Symbols and Base</h5>
-                <p class="api-description">Request specific exchange rates by setting the base parameter and symbols parameter in your request.</p>
-                <p class="prettyprint"> GET https://theratesapi.com/api/2025-06-02/?base=USD&amp;symbols=GBP   HTTP/2 </p>
-              </div>
-            </div>
-              <!-- Nav tabs -->
+<section class="doc-section single" id="currencies">
+  <div class="doc-text">
+    <h2>Currencies</h2>
+    {% if currencies | length %}
+    <p>The {{ currencies | length }} currencies on the latest day. Any of them can be the <code>base</code>.</p>
+    <ul class="currency-list">
+      {% for c in currencies %}<li><code>{{ c.code }}</code> {{ c.name }}</li>{% endfor %}
+    </ul>
+    {% else %}
+    <p>The currency list is unavailable right now.</p>
+    {% endif %}
+  </div>
+</section>
 
-            </div>
-
-        <div class="clearfix"></div>
-        <br> 
-        <div class="inner_container pt-0">
-            <p><b>Note:</b>Data is avaliable from 1999-01-04</p>
-            <p class="mb-5">Please cache results whenever possible this will allow us to keep the service without any rate limits or api key requirements.<br>
-            The API comes with no warranty but we do our best effort to keep the service working relibly.</p>
-        </div>
-
-      </div>
-    </div>
+<section class="doc-section single" id="fair-use">
+  <div class="doc-text">
+    <h2>Fair use</h2>
+    <p>There are no keys or rate limits today. Help keep it that way:</p>
+    <ul>
+      <li>Cache responses. Rates change once per working day, and responses carry <code>Cache-Control: public, max-age=300</code>.</li>
+      <li>Don't request more often than you need to. Traffic that harms the service for others may be blocked.</li>
+    </ul>
+    <p>The service comes with no warranty. See the <a href="/terms-and-conditions/">terms of use</a>.</p>
+  </div>
+</section>
 {% endblock %}
