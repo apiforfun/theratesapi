@@ -1,60 +1,36 @@
 {% extends 'pages/base.html' %}
-
+{% block title %}Privacy policy | The Rates API{% endblock %}
+{% block description %}What The Rates API logs, why, and for how long. No accounts, cookies, analytics or third-party scripts.{% endblock %}
 {% block container %}
-     <div class="main_container">
-        <div class="container ">
-        <h3 class="privacy-policy mt-5">Privacy Policy</h3>
-        <p>Our privacy policy applies to data we gather when you use or access our site, application, or simply on interacting with us. We may change this privacy policy every once in a while. At whatever point we make changes to this privacy policy, the progressions are compelling from the time we post the modified privacy policy (as shown by reexamining the date at the highest point of our security strategy). We urge you to review our  privacy policy at whatever point you access our services to remain educated about our data rehearses and the methods that can help ensure your privacy.</p>
+<section class="page container">
+  <h1>Privacy policy</h1>
+  <p class="updated">Last updated 3 October 2026</p>
 
-        <h4>Assortment of Data You Give to Us</h4>
+  <p>The Rates API has no accounts, sets no cookies, and runs no analytics or third-party scripts. The only personal data we handle is what any web server sees when you make a request.</p>
 
-        <p>We gather data you give to us directly. For instance, we gather data when you partake in any interactive features of our services, fill up any forms, demand client assistance, give any contact or distinguishing data or in any case speak with us. The kinds of data we may gather incorporate your name, email address, postal location, Mastercard data and other contact or the data you decide to give.</p>
+  <h2>What we log</h2>
+  <p>When you visit the site or call the API, our web server records the request in an access log: your IP address, the date and time, the URL you requested (including any query parameters), and request headers such as your browser's user agent and the page that linked you here.</p>
+  <p>The application also logs each request's method, URL, response status and response time. That log does not include your IP address.</p>
 
-        <h4>Data We Gather Automatically When You Utilize Our Services </h4>
+  <h2>Why</h2>
+  <p>To keep the service running, to find and fix problems, and to detect and block abusive traffic. We don't use the logs for anything else.</p>
 
-        <p>At the point when you access or utilize our services, we consequently gather data about you, including: Request parameters and url. Time of requests. Ip of request. Headers in request parameter.</p>
+  <h2>How long we keep it</h2>
+  <p>Access logs are rotated by size: we keep the five most recent files of 50 MB each, and older entries are deleted automatically. How far back that reaches depends on how busy the service is.</p>
 
-        <h4>Data We Gather From Different Sources</h4>
+  <h2>Sharing</h2>
+  <p>We don't sell or share the logs. We would only disclose them if the law required us to.</p>
 
-        <p>To furnish you with admittance to the Assistance, or to furnish you with better service in general, we may merge data procured from different sources and consolidate that with data we gather through our services. We gather cash information from: 
-https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html</p>
+  <h2>Cookies and tracking</h2>
+  <p>The site sets no cookies, has no analytics, and loads no scripts, fonts or other files from other companies.</p>
 
-        <h4>Utilization of Data </h4>
-        <p>We use data about you for different purposes, including to: </p>
-        <ul>
-          <li>Deliver, keep up and upgrade our services;</li>
-          <li>Offer assistance you demand, measure exchanges and to send you related data;</li>
-          <li>Send you technical notification, upgrade notifications, security cautions and support and administrative messages;</li>
-          <li>Respond to your queries, comments and provide client assistance; </li>
-          <li>Convey news and data related to our service;</li>
-          <li>Screen and examine trends, utilization and activities related to our services; and</li>
-          <li>Customize and improve our services. </li>
-        </ul>
-        <p>By accessing and utilizing our services, you agree to the handling and transfer of your data in and to the United States and different nations.</p>
+  <h2>Where the service runs</h2>
+  <p>The Rates API is hosted on Amazon Web Services in the United States. The exchange rates come from the <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html">European Central Bank</a>; we don't send them anything about you.</p>
 
-        <h4>Sharing of Data</h4>
-        <p>We may share individual data about you as follows: </p>
-        <ul>
-        <li>With third parties and other specialist co-ops who need admittance to your data to complete the work on our behalf, for example: Google Analytics;</li>
-        <li>On the off chance that we accept divulgence is sensibly important to agree with any relevant law, guideline, legitimate interaction or administrative solicitation;</li>
-        <li>To authorize appropriate client agreements or policies, including our Terms of Service theratesapi.com/terms/; and to ensure us, our clients or the public in general from hurt or criminal operations;</li>
-        <li>Regarding any consolidation, offer of **[DEVELOPER NAME]** resources, financing or securing of all or a segment of our business to another organization; </li>
-        <li>If we inform you through our services (or in our privacy policy) that the data you give will be partaken in a specific way and you contribute such data.</li>
-        <li>We may likewise share accumulated or anonymized data that does not directly help in recognizing you.</li>
-        </ul>
+  <h2>Changes</h2>
+  <p>If this policy changes, we'll update this page and the date at the top.</p>
 
-        <h4>Third Party Analytics/h4>
-
-        <p>We may permit third parties to deliver analytics services. These third parties may utilize cookies, web beacons and different technologies to gather data about your utilization of the services and different websites, including your IP address, internet browser, pages viewed, time spent on pages, links clicked and conversion data. This data might be utilized by us and third parties to, in addition to other things, break down and track information, decide the popularity or reach of a certain content and different websites and better comprehend your online activity. Our privacy policies are not applicable to, and we are not answerable for, third party cookies, web beacons or other tracking technologies and we urge you to check the privacy policies of these third parties to become familiar with their privacy practices.</p>
-
-        <h4>Security</h4>
-
-        <p>We take appropriate measures to help guard personal data from misfortune, robbery, abuse and unapproved access, disclosure, alteration and destruction.</p>
-
-        <h4>Cookies</h4>
-
-        <p>Most internet browsers are set to acknowledge cookies by default. In the event that you like, you can for the most part decide to set your program to eliminate or dismiss browser cookies. Kindly note that in the event that you decide to eliminate or dismiss cookies, this could influence the availability and functionality of our services.</p>
-
-      </div>
-    </div>
+  <h2>Contact</h2>
+  <p>Questions about privacy: <a href="mailto:apiforfun2@gmail.com">apiforfun2@gmail.com</a>.</p>
+</section>
 {% endblock %}

@@ -1,13 +1,12 @@
 const express = require('express')
 const router = express.Router()
-const { index } = require('../controller/common')
+const { index, documentation, tryIt, privacy, terms } = require('../controller/common')
 
-/* GET home page. */
+// Express matches these with or without a trailing slash. Anything else falls to the 404 handler.
 router.get('/', index)
-
-router.get('/:slug', function (req, res) {
-  console.log(req.params.slug)
-  res.render('pages/' + req.params.slug + '.html')
-})
+router.get('/documentation', documentation)
+router.get('/try', tryIt)
+router.get('/privacy-policy', privacy)
+router.get('/terms-and-conditions', terms)
 
 module.exports = router
