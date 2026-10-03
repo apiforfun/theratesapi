@@ -14,8 +14,4 @@ function terms (req, res, next) {
   res.render('terms.html')
 }
 
-function login (req, res, next) {
-  res.render('user/login.html')
-}
-
-module.exports = { index, documentation, privacy, terms, login }
+module.exports = { index, documentation, privacy, terms }
