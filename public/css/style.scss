@@ -220,18 +220,20 @@ code, pre { font-family: var(--mono); font-size: 0.875em; }
   border-radius: var(--radius);
   background: var(--navy-deep);
   color: var(--code-text);
+  color-scheme: dark;
 }
 
 .code-example {
   min-width: 0;
 
+  // Long URLs wrap instead of scrolling, so no scrollbar appears in the dark panels.
   pre {
     margin: 0 0 8px;
     color: var(--code-text);
     font-size: 0.85rem;
     line-height: 1.55;
-    white-space: pre;
-    overflow-x: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -334,6 +336,7 @@ code, pre { font-family: var(--mono); font-size: 0.875em; }
   border: 1px solid var(--navy-line);
   border-radius: 12px;
   background: var(--navy-deep);
+  color-scheme: dark;
 }
 
 .try-controls {
@@ -364,7 +367,7 @@ code, pre { font-family: var(--mono); font-size: 0.875em; }
 
 .request {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 8px 10px;
   border-radius: 6px;
@@ -373,7 +376,8 @@ code, pre { font-family: var(--mono); font-size: 0.875em; }
   font-family: var(--mono);
   font-size: 0.85rem;
 
-  .url { min-width: 0; overflow-x: auto; white-space: nowrap; }
+  .method { flex-shrink: 0; }
+  .url { min-width: 0; overflow-wrap: anywhere; }
 }
 
 .try-status { min-height: 1.2em; margin: 10px 0 0; color: var(--code-muted); font-size: 0.8rem; }
@@ -476,7 +480,7 @@ code, pre { font-family: var(--mono); font-size: 0.875em; }
   td { padding: 8px 12px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
 }
 
-.doc-code { padding: 24px 20px; background: var(--navy-deep); color: var(--code-text); }
+.doc-code { padding: 24px 20px; background: var(--navy-deep); color: var(--code-text); color-scheme: dark; }
 
 .doc-code-inner { position: sticky; top: 60px; }
 
