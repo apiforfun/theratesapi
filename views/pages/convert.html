@@ -1,7 +1,6 @@
 {% extends 'pages/base.html' %}
-{% block title %}Currency converter with official reference rates | The Rates API{% endblock %}
-{% block description %}Convert between {{ options | length }} currencies at the official reference rates published by the European Central Bank and Banca d'Italia. Free, with a one-year chart for every pair.{% endblock %}
-{% block head %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% set pageTitle %}Currency converter with official reference rates | The Rates API{% endset %}
+{% set pageDescription %}Convert between {{ options | length }} currencies at the official reference rates published by the European Central Bank and Banca d'Italia. Free, with a one-year chart for every pair.{% endset %}
 {% block container %}
 <section class="pair-hero">
   <div class="container">

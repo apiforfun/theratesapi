@@ -1,8 +1,7 @@
 {% extends 'pages/base.html' %}
 {% from 'pages/macros.html' import code_example, line_chart %}
-{% block title %}{{ name }} ({{ code }}) exchange rates: {{ titleFigure }} | The Rates API{% endblock %}
-{% block description %}{{ titleFigure }} on {{ dayLong }}. {{ name }} ({{ code }}) against the world's most used currencies, with a one-year chart. Official reference rates published by {{ publisher }}, free through an API.{% endblock %}
-{% block head %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% set pageTitle %}{{ name }} ({{ code }}) exchange rates: {{ titleFigure }} | The Rates API{% endset %}
+{% set pageDescription %}{{ titleFigure }} on {{ dayLong }}. {{ name }} ({{ code }}) against the world's most used currencies, with a one-year chart. Official reference rates published by {{ publisher }}, free through an API.{% endset %}
 {% block container %}
 <section class="pair-hero">
   <div class="container pair-hero-inner">

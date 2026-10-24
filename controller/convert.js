@@ -2,11 +2,12 @@ const currencyNames = require('./currencies')
 const { currencyStatus, pairSeries, pairDay, changes, isIndexable, TOP_CURRENCIES, daysBefore } = require('./pairs')
 const { lineChart } = require('./chart')
 const { sig6, longDate, shortDate, changeText } = require('./format')
+const { SITE } = require('../config/site')
+const { jsonLd, faqPage, breadcrumbs } = require('./structured-data')
 
 const PAIR = /^([a-z]{3})-to-([a-z]{3})$/i
 const AMOUNTS = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 5000, 10000]
 const SOURCE_NAMES = { ecb: 'the European Central Bank', bdi: 'Banca d\'Italia' }
-const SITE = 'https://theratesapi.com'
 
 const nameOf = function (code) { return currencyNames[code] || code }
 const pairPath = function (from, to) { return '/convert/' + from.toLowerCase() + '-to-' + to.toLowerCase() + '/' }
@@ -30,6 +31,27 @@ function publishedBy (sources) {
 // "Published by ..." for the euro's own rates, "Calculated from ..." for every other base.
 function attribution (from, sources, day) {
   return (from === 'EUR' ? 'Published by ' : 'Calculated from the euro rates published by ') + publishedBy(sources) + ' on ' + longDate(day) + '.'
+}
+
+// Plain text, so the same answers serve the page and the FAQ structured data.
+function pairQuestions (p) {
+  const pair = p.from + ' to ' + p.to
+  const questions = [
+    { question: 'What is the ' + pair + ' exchange rate today?', answer: 'The latest reference rate, for ' + longDate(p.day) + ', is 1 ' + p.from + ' = ' + sig6(p.rate) + ' ' + p.to + ' (' + p.fromName + ' to ' + p.toName + ').' },
+    { question: 'How much is 1 ' + p.to + ' in ' + p.from + '?', answer: '1 ' + p.to + ' = ' + sig6(1 / p.rate) + ' ' + p.from + ' at the same rate.' }
+  ]
+  if (p.yearChange !== null) {
+    const moved = p.yearChange > 0 ? 'rose ' + p.yearChange.toFixed(2) + '%' : p.yearChange < 0 ? 'fell ' + (-p.yearChange).toFixed(2) + '%' : 'was unchanged'
+    questions.push({
+      question: 'How has ' + pair + ' changed over the past year?',
+      answer: pair + ' ' + moved + ' in the year to ' + longDate(p.day) + '. The year\'s high was ' + sig6(p.chart.high.rate) + ' on ' + shortDate(p.chart.high.date) + ' and its low ' + sig6(p.chart.low.rate) + ' on ' + shortDate(p.chart.low.date) + '.'
+    })
+  }
+  questions.push(
+    { question: 'Where does this rate come from?', answer: p.attribution + ' Central banks publish reference rates once each working day, so this is not a live market rate, and banks and payment providers add their own margin.' },
+    { question: 'Can I get this rate from an API?', answer: 'Yes, free and without a key: ' + p.apiLatest + ' returns it as JSON. Put a date such as ' + p.day + ' in place of latest for a past day.' }
+  )
+  return questions
 }
 
 async function pairPage (req, res, next) {
@@ -58,6 +80,9 @@ async function pairPage (req, res, next) {
     const chart = lineChart(year)
     const change = changes(series, day)
     const amount = parseAmount(req.query.amount)
+    const attributionText = attribution(from, [[from, fromInfo], [to, toInfo]].filter(function ([code]) { return code !== 'EUR' }).map(function ([, info]) { return info.source }), day)
+    const apiLatest = SITE + '/api/latest?base=' + from + '&symbols=' + to
+    const questions = pairQuestions({ from, to, fromName: nameOf(from), toName: nameOf(to), rate, day, attribution: attributionText, yearChange: change.y1, chart, apiLatest })
 
     const history = series.slice(-31).map(function (point, i, recent) {
       const previous = i > 0 ? recent[i - 1].rate : null
@@ -82,7 +107,7 @@ async function pairPage (req, res, next) {
       day,
       dayLong: longDate(day),
       // The euro has no rows of its own: only the other side's bank published anything.
-      attribution: attribution(from, [[from, fromInfo], [to, toInfo]].filter(function ([code]) { return code !== 'EUR' }).map(function ([, info]) { return info.source }), day),
+      attribution: attributionText,
       amount,
       amountText: sig6(amount * rate),
       amounts: AMOUNTS.map(function (a) {
@@ -104,8 +129,13 @@ async function pairPage (req, res, next) {
       inversePath: pairPath(to, from),
       related: others.map(function (code) { return { code, path: pairPath(from, code) } }),
       indexable: isIndexable(from, to),
-      canonical: SITE + pairPath(from, to),
-      apiLatest: SITE + '/api/latest?base=' + from + '&symbols=' + to,
+      questions,
+      structuredData: jsonLd(
+        breadcrumbs([['Home', '/'], ['Currency converter', '/convert/'], [from + ' to ' + to, pairPath(from, to)]]),
+        { '@type': 'ExchangeRateSpecification', currency: from, currentExchangeRate: { '@type': 'UnitPriceSpecification', price: Number(rate.toPrecision(6)), priceCurrency: to, validFrom: day } },
+        faqPage(questions)
+      ),
+      apiLatest,
       apiDate: SITE + '/api/' + day + '?base=' + from + '&symbols=' + to
     })
   } catch (err) {
@@ -146,12 +176,11 @@ async function converter (req, res, next) {
       amount: parseAmount(req.query.amount),
       message,
       toUsd: popular('USD'),
-      toEur: popular('EUR'),
-      canonical: SITE + '/convert/'
+      toEur: popular('EUR')
     })
   } catch (err) {
     next(err)
   }
 }
 
-module.exports = { pairPage, converter, pairPath, nameOf, publishedBy, SITE }
+module.exports = { pairPage, converter, pairPath, nameOf, publishedBy }

@@ -38,8 +38,12 @@ for (const file of ['css/style.css', 'js/highlight.js', 'js/site.js']) {
 }
 njEnv.addGlobal('assetVersion', assetHash.digest('hex').slice(0, 8))
 
+njEnv.addGlobal('site', require('./config/site').SITE)
+njEnv.addGlobal('siteStructuredData', require('./controller/structured-data').SITE_DATA)
+
 // register .html so you can keep your existing filenames
 app.engine('html', njEnv.render)
+app.engine('txt', njEnv.render)
 app.set('view engine', 'html')
 app.set('views', viewsPath)
 
@@ -70,7 +74,7 @@ app.use(function (err, req, res, next) {
   const status = err.status || 500
   if (status >= 500) console.error(err)
   res.status(status)
-  res.render('error.html', { status })
+  res.render('error.html', { status, canonical: null })
 })
 
 const PORT = process.env.PORT || 9060

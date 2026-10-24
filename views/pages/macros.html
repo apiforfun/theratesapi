@@ -35,3 +35,18 @@ data = requests.get('{{ url }}').json()</pre>
   <figcaption class="chart-axis"><span>{{ chart.firstText }}</span><span>{{ chart.lastText }}</span></figcaption>
 </figure>
 {% endmacro %}
+
+{# Questions and answers in plain text; the same items go into the page's FAQ structured data. #}
+{% macro faq_section(heading, items) %}
+<section class="faq">
+  <div class="container">
+    <h2>{{ heading }}</h2>
+    {% for item in items %}
+    <details>
+      <summary>{{ item.question }}</summary>
+      <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+{% endmacro %}

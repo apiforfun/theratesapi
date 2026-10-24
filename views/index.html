@@ -1,6 +1,5 @@
 {% extends 'pages/base.html' %}
-{% from 'pages/macros.html' import code_example %}
-{% block head %}<script type="application/ld+json">{{ faqJson | safe }}</script>{% endblock %}
+{% from 'pages/macros.html' import code_example, faq_section %}
 {% block container %}
 <section class="hero">
   <div class="container hero-inner">
@@ -131,15 +130,5 @@
 </section>
 {% endif %}
 
-<section class="faq">
-  <div class="container">
-    <h2>Questions</h2>
-    {% for item in faq %}
-    <details>
-      <summary>{{ item.question }}</summary>
-      <p>{{ item.answer }}</p>
-    </details>
-    {% endfor %}
-  </div>
-</section>
+{{ faq_section('Questions', faq) }}
 {% endblock %}

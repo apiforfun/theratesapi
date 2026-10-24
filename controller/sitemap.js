@@ -1,5 +1,6 @@
 const { currencyStatus, TOP_CURRENCIES } = require('./pairs')
-const { pairPath, SITE } = require('./convert')
+const { pairPath } = require('./convert')
+const { SITE } = require('../config/site')
 
 // The pages worth finding: the main ones, every currency page, and every pair among the top 30.
 // Other pairs work and are linked, but are left out so the list stays focused.
