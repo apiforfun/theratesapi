@@ -4,6 +4,14 @@ theratesapi is a free API for present and historical foreign exchange rates. We 
 
 **Note**: ECB rates are published around 16:00 CET and Banca d'Italia's after them on every working day; a new day appears in the API once both are in.
 
+## Links
+
+* [Website](https://theratesapi.com/)
+* [Documentation](https://theratesapi.com/documentation/): endpoints, parameters, errors and live examples
+* [Currency converter](https://theratesapi.com/convert/): a page for every currency pair, with a one-year chart
+* [Currencies](https://theratesapi.com/currencies/): every currency, where it is used and which central bank publishes it
+* [llms.txt](https://theratesapi.com/llms.txt): the API in plain text, for AI assistants
+
 ## Usage
 
 * Latest Rates based on EUR
@@ -11,7 +19,6 @@ theratesapi is a free API for present and historical foreign exchange rates. We 
 URL: https://theratesapi.com/api/latest
 
 {"date":"2025-06-02","base":"EUR","rates":{"USD":1.1419,"JPY":162.98,"BGN":1.9558,"CZK":24.899,"DKK":7.4606,"GBP":0.8434,"HUF":402.83,"PLN":4.2578,"RON":5.0547,"SEK":10.8535,"CHF":0.9336,"ISK":144.4,"NOK":11.51,"TRY":44.7505,"AUD":1.7606,"BRL":6.5015,"CAD":1.5643,"CNY":8.2214,"HKD":8.9576,"IDR":18584.37,"ILS":4.0134,"INR":97.4995,"KRW":1572.2,"MXN":22.0066,"MYR":4.8605,"NZD":1.8972,"PHP":63.553,"SGD":1.4686,"THB":37.163,"ZAR":20.4734}}
-%                       
 ```
 
 * Latest Rates based on USD
