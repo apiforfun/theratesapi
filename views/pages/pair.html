@@ -1,9 +1,8 @@
 {% extends 'pages/base.html' %}
-{% from 'pages/macros.html' import code_example, line_chart %}
-{% block title %}{{ from }} to {{ to }} exchange rate: 1 {{ from }} = {{ rateText }} {{ to }} | The Rates API{% endblock %}
-{% block description %}Convert {{ fromName }} to {{ toName }} at the reference rate of {{ dayLong }}: 1 {{ from }} = {{ rateText }} {{ to }}. One-year chart, the last 30 working days and a free API.{% endblock %}
+{% from 'pages/macros.html' import code_example, line_chart, faq_section %}
+{% set pageTitle %}{{ from }} to {{ to }} exchange rate: 1 {{ from }} = {{ rateText }} {{ to }} | The Rates API{% endset %}
+{% set pageDescription %}Convert {{ fromName }} to {{ toName }} at the reference rate of {{ dayLong }}: 1 {{ from }} = {{ rateText }} {{ to }}. One-year chart, the last 30 working days and a free API.{% endset %}
 {% block head %}
-<link rel="canonical" href="{{ canonical }}">
 {% if not indexable %}<meta name="robots" content="noindex">{% endif %}
 {% endblock %}
 {% block container %}
@@ -90,6 +89,8 @@
     </div>
   </div>
 </section>
+
+{{ faq_section('Questions about ' + from + ' to ' + to, questions) }}
 
 <section class="pair-section alt">
   <div class="container">

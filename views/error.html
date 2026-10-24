@@ -1,5 +1,5 @@
 {% extends 'pages/base.html' %}
-{% block title %}{% if status == 404 %}Page not found{% else %}Something went wrong{% endif %} | The Rates API{% endblock %}
+{% set pageTitle %}{% if status == 404 %}Page not found{% else %}Something went wrong{% endif %} | The Rates API{% endset %}
 {% block container %}
 <section class="page container">
   {% if status == 404 %}

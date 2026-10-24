@@ -1,0 +1,42 @@
+{#- Plain text: values print with | safe, since HTML escaping would only garble them here. -#}
+# The Rates API
+
+> Free JSON API for foreign exchange reference rates: about 150 currencies against the euro or any other base currency, as published by the European Central Bank and Banca d'Italia on every working day since 4 January 1999. No API key, no signup, CORS open.
+
+These are central bank reference rates, set once per working day. They are not live market prices, and not the rates a bank or payment provider offers. Where both banks publish a currency, the European Central Bank's figure is used. Rates for any other base are calculated from the euro rates and rounded to 6 decimal places.
+
+## API
+
+Base URL: https://theratesapi.com/api
+
+- `GET /api/latest`: rates for the newest working day both banks have published.
+- `GET /api/YYYY-MM-DD`: rates for that day, from 1999-01-04 onwards. Weekends and holidays return the previous working day and future dates return the latest rates, so read the `date` field.
+- `base` (default `EUR`): the currency to quote against. Three-letter code, case-insensitive.
+- `symbols` (default: all): comma-separated currencies to return, such as `USD,GBP`. Unknown codes are skipped.
+- Errors return HTTP 400 with `{"error": "Invalid date"}` for a date that doesn't exist, or `{"error": "Invalid base or symbols"}` for an unknown base, a date before 1999-01-04 or a repeated parameter.
+- Retired currencies, such as CYP (Cypriot pound), work as base or symbols for the days they were published.
+- Responses carry `Cache-Control: public, max-age=300`. Rates change once per working day, so cache them. There are no keys or rate limits; traffic that harms the service may be blocked.
+{% if example %}
+Example: `GET https://theratesapi.com/api/latest?base=USD&symbols=EUR,GBP` returns
+
+```json
+{{ example | safe }}
+```
+{% endif %}
+## Pages
+
+- [Documentation](https://theratesapi.com/documentation/): endpoints, parameters, errors and live examples
+- [Currency converter](https://theratesapi.com/convert/): every pair has a page at `https://theratesapi.com/convert/{from}-to-{to}/` with lowercase codes, for example https://theratesapi.com/convert/usd-to-inr/
+- [Currencies](https://theratesapi.com/currencies/): every currency has a page at `https://theratesapi.com/currencies/{code}/`, for example https://theratesapi.com/currencies/inr/
+- [Terms of use](https://theratesapi.com/terms-and-conditions/)
+- [Source code](https://github.com/apiforfun/theratesapi)
+
+## Currencies
+{% if currencies | length %}
+The {{ currencies | length }} currencies on {{ date }}. Any of them can be the base.
+
+{% for c in currencies %}- {{ c.code }}: {{ c.name | safe }}
+{% endfor %}
+{%- else %}
+The currency list is unavailable right now. https://theratesapi.com/api/latest lists the current codes.
+{% endif %}

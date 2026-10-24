@@ -2,6 +2,7 @@ const { fetchRates } = require('./api')
 const currencyNames = require('./currencies')
 const { rateSheet, sourceSummary, FAQ } = require('./home')
 const { longDate, shortDate, changeText } = require('./format')
+const { jsonLd, faqPage, DATASET, WEB_API } = require('./structured-data')
 
 // Codes published on the latest day, EUR included, sorted.
 async function latestCurrencies () {
@@ -34,14 +35,8 @@ function summaryView (summary) {
   return view
 }
 
-// The FAQ as schema.org data; '<' is escaped so the JSON can't close its script tag.
-const FAQ_JSON = JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQ.map(function (item) {
-    return { '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } }
-  })
-}).replace(/</g, '\\u003c')
+const HOME_DATA = jsonLd(DATASET, faqPage(FAQ))
+const DOCS_DATA = jsonLd(WEB_API)
 
 // Pages still render when the database is down; the live examples and data sections are left out.
 async function index (req, res) {
@@ -65,7 +60,7 @@ async function index (req, res) {
     console.error('Home page examples failed', err)
   }
   const currencies = codes.length > 1 ? named(codes) : []
-  res.render('index.html', { active: 'home', example, codes, currencies, sheet, summary, faq: FAQ, faqJson: FAQ_JSON })
+  res.render('index.html', { active: 'home', example, codes, currencies, sheet, summary, faq: FAQ, structuredData: HOME_DATA })
 }
 
 async function documentation (req, res) {
@@ -84,7 +79,7 @@ async function documentation (req, res) {
   } catch (err) {
     console.error('Documentation examples failed', err)
   }
-  res.render('pages/documentation.html', { active: 'docs', latest, historical, currencies })
+  res.render('pages/documentation.html', { active: 'docs', latest, historical, currencies, structuredData: DOCS_DATA })
 }
 
 // Without JS the home page try-it form lands here: tidy the inputs the way site.js does and
@@ -100,6 +95,25 @@ function tryIt (req, res) {
   res.redirect('/api/' + encodeURIComponent(field('date') || 'latest') + (query ? '?' + query : ''))
 }
 
+// The API in plain text for AI assistants and answer engines (llmstxt.org), with a live example and
+// the currencies on the latest day. Without the database it still describes the API.
+async function llmsText (req, res, next) {
+  let example = null
+  let currencies = []
+  try {
+    const [result, codes] = await Promise.all([fetchRates('USD', null, ['EUR', 'GBP']), latestCurrencies()])
+    example = result
+    currencies = codes.length > 1 ? named(codes) : []
+  } catch (err) {
+    console.error('llms.txt data failed', err)
+  }
+  res.render('llms.txt', { example: example && JSON.stringify(example), date: example && example.date, currencies }, function (err, text) {
+    if (err) return next(err)
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.type('text/plain; charset=utf-8').send(text)
+  })
+}
+
 function privacy (req, res) {
   res.render('pages/privacy-policy.html', { active: 'privacy' })
 }
@@ -108,4 +122,4 @@ function terms (req, res) {
   res.render('pages/terms-and-conditions.html', { active: 'terms' })
 }
 
-module.exports = { index, documentation, tryIt, privacy, terms }
+module.exports = { index, documentation, tryIt, llmsText, privacy, terms }

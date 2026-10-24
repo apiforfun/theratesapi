@@ -29,6 +29,17 @@ async function get (port, urlPath) {
   return { res, html: await res.text() }
 }
 
+// Every schema.org item on a page, from all its JSON-LD blocks, with @graph lists flattened.
+function structuredData (html) {
+  return [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].flatMap(function (m) {
+    const data = JSON.parse(m[1])
+    return data['@graph'] || [data]
+  })
+}
+function ofType (html, type) {
+  return structuredData(html).filter(function (item) { return item['@type'] === type })
+}
+
 const servers = []
 before(async function () {
   assert.ok(process.env.DATABASE_URL, 'set DATABASE_URL to the local verification database')
@@ -46,10 +57,23 @@ test('home renders the live example', async function () {
   assert.match(html, /<span class="j-key">"rates"<\/span>/)
 })
 
-test('content pages render with or without a trailing slash', async function () {
-  for (const urlPath of ['/documentation/', '/documentation', '/privacy-policy/', '/terms-and-conditions/']) {
-    const { res } = await get(LIVE, urlPath)
-    assert.strictEqual(res.status, 200, urlPath)
+test('each page has one address: without the trailing slash it redirects', async function () {
+  const moves = [
+    ['/documentation', '/documentation/'],
+    ['/privacy-policy', '/privacy-policy/'],
+    ['/terms-and-conditions', '/terms-and-conditions/'],
+    ['/convert', '/convert/'],
+    ['/currencies', '/currencies/'],
+    ['/convert/usd-to-inr?amount=5', '/convert/usd-to-inr/?amount=5'],
+    ['/currencies/inr', '/currencies/inr/']
+  ]
+  for (const [from, to] of moves) {
+    const res = await fetch('http://127.0.0.1:' + LIVE + from, { redirect: 'manual' })
+    assert.strictEqual(res.status, 301, from)
+    assert.strictEqual(res.headers.get('location'), to, from)
+  }
+  for (const urlPath of ['/documentation/', '/privacy-policy/', '/terms-and-conditions/', '/api/latest']) {
+    assert.strictEqual((await get(LIVE, urlPath)).res.status, 200, urlPath)
   }
 })
 
@@ -81,7 +105,7 @@ test('API JSON keeps its shape and filters symbols', async function () {
 })
 
 test('pages render without the database', async function () {
-  for (const urlPath of ['/', '/documentation/']) {
+  for (const urlPath of ['/', '/documentation/', '/llms.txt']) {
     const { res } = await get(DOWN, urlPath)
     assert.strictEqual(res.status, 200, urlPath)
   }
@@ -169,10 +193,8 @@ test('home counts currencies and names both sources from the data', async functi
 
 test('home answers common questions, also as structured data', async function () {
   const { html } = await get(LIVE, '/')
-  const json = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)
-  assert.ok(json, 'FAQ structured data')
-  const faq = JSON.parse(json[1])
-  assert.strictEqual(faq['@type'], 'FAQPage')
+  const [faq] = ofType(html, 'FAQPage')
+  assert.ok(faq, 'FAQ structured data')
   assert.ok(faq.mainEntity.length >= 5)
   for (const item of faq.mainEntity) {
     assert.ok(html.includes('<summary>' + item.name.replace(/'/g, '&#39;') + '</summary>'), item.name)
@@ -454,4 +476,161 @@ test('currency page titles carry a figure', async function () {
   const title = html.match(/<title>([^<]*)<\/title>/)[1]
   assert.match(title, /^Indian rupee \(INR\) exchange rates: 1 INR = [\d.]+ USD \| The Rates API$/)
   assert.strictEqual(Math.round(Number(title.match(/= ([\d.]+) USD/)[1]) * 1e6) / 1e6, usd)
+})
+
+// Search engines, link previews and answer engines
+
+const SITE = 'https://theratesapi.com'
+
+test('every page names its one canonical address; error pages name none', async function () {
+  const pages = [
+    ['/', '/'],
+    ['/documentation/', '/documentation/'],
+    ['/privacy-policy/', '/privacy-policy/'],
+    ['/terms-and-conditions/', '/terms-and-conditions/'],
+    ['/convert/?from=usd&to=usd', '/convert/'],
+    ['/convert/usd-to-inr/?amount=5', '/convert/usd-to-inr/'],
+    ['/currencies/', '/currencies/'],
+    ['/currencies/inr/', '/currencies/inr/']
+  ]
+  for (const [urlPath, canonical] of pages) {
+    const { html } = await get(LIVE, urlPath)
+    assert.deepStrictEqual(html.match(/<link rel="canonical"[^>]*>/g), ['<link rel="canonical" href="' + SITE + canonical + '">'], urlPath)
+  }
+  assert.doesNotMatch((await get(LIVE, '/nope')).html, /rel="canonical"/)
+})
+
+test('every page has link preview tags that repeat its title, description and address', async function () {
+  for (const urlPath of ['/', '/documentation/', '/convert/usd-to-inr/', '/currencies/inr/', '/currencies/top/']) {
+    const { html } = await get(LIVE, urlPath)
+    const title = html.match(/<title>([^<]*)<\/title>/)[1]
+    const description = html.match(/<meta name="description" content="([^"]*)">/)[1]
+    const canonical = html.match(/<link rel="canonical" href="([^"]*)">/)[1]
+    assert.ok(html.includes('<meta property="og:title" content="' + title + '">'), urlPath)
+    assert.ok(html.includes('<meta property="og:description" content="' + description + '">'), urlPath)
+    assert.ok(html.includes('<meta property="og:url" content="' + canonical + '">'), urlPath)
+    assert.ok(html.includes('<meta property="og:image" content="' + SITE + '/og-image.png">'), urlPath)
+    assert.ok(html.includes('<meta property="og:type" content="website">'), urlPath)
+    assert.ok(html.includes('<meta property="og:site_name" content="The Rates API">'), urlPath)
+    assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image">'), urlPath)
+    assert.doesNotMatch(title + description, /&amp;#|&amp;amp;/, urlPath)
+  }
+})
+
+// Status, type and pixel size of a PNG served by the site.
+async function png (urlPath) {
+  const res = await fetch('http://127.0.0.1:' + LIVE + urlPath)
+  const bytes = Buffer.from(await res.arrayBuffer())
+  return { status: res.status, type: res.headers.get('content-type'), signature: bytes.toString('latin1', 1, 4), width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+}
+
+test('the link preview image is a 1200 by 630 PNG', async function () {
+  assert.deepStrictEqual(await png('/og-image.png'), { status: 200, type: 'image/png', signature: 'PNG', width: 1200, height: 630 })
+})
+
+test('browsers, phones and search results find the site icons', async function () {
+  const { html } = await get(LIVE, '/')
+  assert.ok(html.includes('<link rel="icon" href="/favicon.ico" sizes="32x32">'))
+  assert.ok(html.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml">'))
+  assert.ok(html.includes('<link rel="apple-touch-icon" href="/apple-touch-icon.png">'))
+  assert.deepStrictEqual(await png('/apple-touch-icon.png'), { status: 200, type: 'image/png', signature: 'PNG', width: 180, height: 180 })
+  const ico = await fetch('http://127.0.0.1:' + LIVE + '/favicon.ico')
+  assert.strictEqual(ico.status, 200)
+  const bytes = Buffer.from(await ico.arrayBuffer())
+  assert.deepStrictEqual([bytes.readUInt16LE(0), bytes.readUInt16LE(2)], [0, 1], 'ICO header')
+  const sizes = Array.from({ length: bytes.readUInt16LE(4) }, function (_, i) { return bytes[6 + 16 * i] || 256 })
+  assert.ok(sizes.includes(32) && sizes.includes(48), 'favicon.ico sizes ' + sizes)
+})
+
+test('every page describes the site and its publisher as structured data', async function () {
+  for (const urlPath of ['/', '/documentation/', '/convert/usd-to-inr/', '/currencies/inr/', '/privacy-policy/']) {
+    const { html } = await get(LIVE, urlPath)
+    const [organization] = ofType(html, 'Organization')
+    const [website] = ofType(html, 'WebSite')
+    assert.strictEqual(organization.name, 'The Rates API', urlPath)
+    assert.strictEqual(organization.url, SITE + '/', urlPath)
+    assert.strictEqual(organization.logo, SITE + '/apple-touch-icon.png', urlPath)
+    assert.deepStrictEqual(organization.sameAs, ['https://github.com/apiforfun/theratesapi'], urlPath)
+    assert.strictEqual(website.url, SITE + '/', urlPath)
+    assert.strictEqual(website.publisher['@id'], organization['@id'], urlPath)
+  }
+})
+
+test('home describes the rates as a dataset', async function () {
+  const [dataset] = ofType((await get(LIVE, '/')).html, 'Dataset')
+  assert.ok(dataset, 'Dataset')
+  assert.ok(dataset.description.length >= 50)
+  assert.strictEqual(dataset.temporalCoverage, '1999-01-04/..')
+  assert.strictEqual(dataset.isAccessibleForFree, true)
+  assert.deepStrictEqual(dataset.creator.map(function (c) { return c.name }), ['European Central Bank', 'Banca d\'Italia'])
+  assert.deepStrictEqual(dataset.distribution, [{ '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: SITE + '/api/latest' }])
+})
+
+test('docs describe the API as structured data', async function () {
+  const [webApi] = ofType((await get(LIVE, '/documentation/')).html, 'WebAPI')
+  assert.ok(webApi, 'WebAPI')
+  assert.strictEqual(webApi.documentation, SITE + '/documentation/')
+  assert.strictEqual(webApi.url, SITE + '/api/latest')
+  assert.strictEqual(webApi.termsOfService, SITE + '/terms-and-conditions/')
+})
+
+test('pair and currency pages carry breadcrumbs', async function () {
+  const trails = [
+    ['/convert/usd-to-inr/', [['Home', '/'], ['Currency converter', '/convert/'], ['USD to INR', '/convert/usd-to-inr/']]],
+    ['/currencies/inr/', [['Home', '/'], ['Currencies', '/currencies/'], ['Indian rupee', '/currencies/inr/']]]
+  ]
+  for (const [urlPath, trail] of trails) {
+    const [list] = ofType((await get(LIVE, urlPath)).html, 'BreadcrumbList')
+    assert.deepStrictEqual(list.itemListElement, trail.map(function ([name, path], i) {
+      return { '@type': 'ListItem', position: i + 1, name, item: SITE + path }
+    }), urlPath)
+  }
+})
+
+test('pair page states its rate as structured data', async function () {
+  const { html } = await get(LIVE, '/convert/usd-to-inr/')
+  const figure = pairFigure(html, 'USD', 'INR')
+  const [spec] = ofType(html, 'ExchangeRateSpecification')
+  assert.strictEqual(spec.currency, 'USD')
+  assert.strictEqual(spec.currentExchangeRate['@type'], 'UnitPriceSpecification')
+  assert.strictEqual(spec.currentExchangeRate.priceCurrency, 'INR')
+  assert.strictEqual(spec.currentExchangeRate.price, Number(figure.rate.toPrecision(6)))
+  assert.match(spec.currentExchangeRate.validFrom, /^\d{4}-\d{2}-\d{2}$/)
+})
+
+test('pair page answers common questions in plain sentences, also as structured data', async function () {
+  const { html } = await get(LIVE, '/convert/usd-to-inr/')
+  const figure = pairFigure(html, 'USD', 'INR')
+  const [faq] = ofType(html, 'FAQPage')
+  const questions = faq.mainEntity.map(function (q) { return q.name })
+  assert.deepStrictEqual(questions, [
+    'What is the USD to INR exchange rate today?',
+    'How much is 1 INR in USD?',
+    'How has USD to INR changed over the past year?',
+    'Where does this rate come from?',
+    'Can I get this rate from an API?'
+  ])
+  const answers = faq.mainEntity.map(function (q) { return q.acceptedAnswer.text })
+  assert.ok(answers[0].includes('1 USD = ' + figure.text + ' INR'), answers[0])
+  assert.match(answers[2], /^USD to INR (rose|fell) \d+\.\d\d% in the year to [A-Z][a-z]+day, \d+ [A-Z][a-z]+ \d{4}\. The year's high was [\d.,]+ on .+ and its low [\d.,]+ on .+\.$/)
+  assert.ok(answers[4].includes(SITE + '/api/latest?base=USD&symbols=INR'), answers[4])
+  for (const [i, question] of questions.entries()) {
+    assert.ok(html.includes('<summary>' + question + '</summary>'), question)
+    assert.ok(html.includes('<p>' + answers[i].replace(/&/g, '&amp;').replace(/'/g, '&#39;') + '</p>'), answers[i])
+  }
+})
+
+test('llms.txt describes the API and lists the current currencies', async function () {
+  const { res, html: text } = await get(LIVE, '/llms.txt')
+  assert.strictEqual(res.status, 200)
+  assert.match(res.headers.get('content-type'), /^text\/plain; charset=utf-8/)
+  assert.match(text, /^# The Rates API\n\n> .+\n/)
+  assert.match(text, /GET \/api\/latest/)
+  assert.match(text, /GET \/api\/YYYY-MM-DD/)
+  assert.ok(text.includes(SITE + '/documentation/'))
+  const latest = await api('')
+  for (const code of ['EUR', ...Object.keys(latest.rates)]) assert.match(text, new RegExp('^- ' + code + ': .+$', 'm'), code)
+  assert.match(text, /^- USD: US dollar$/m)
+  assert.match(text, /^- TOP: Tongan pa'anga$/m)
+  assert.doesNotMatch(text, /&#39;|&amp;|&quot;|<\/?[a-z]/)
 })

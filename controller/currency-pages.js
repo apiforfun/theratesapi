@@ -3,7 +3,9 @@ const { currencyStatus, pairSeries, TOP_CURRENCIES, daysBefore } = require('./pa
 const { usedIn } = require('./countries')
 const { lineChart } = require('./chart')
 const { sig6, longDate, shortDate } = require('./format')
-const { pairPath, nameOf, publishedBy, SITE } = require('./convert')
+const { pairPath, nameOf, publishedBy } = require('./convert')
+const { SITE } = require('../config/site')
+const { jsonLd, breadcrumbs } = require('./structured-data')
 
 const PUBLISHERS = { ecb: 'the European Central Bank', bdi: 'Banca d\'Italia' }
 const PUBLISHER_NAMES = { ecb: 'European Central Bank', bdi: 'Banca d\'Italia' }
@@ -81,7 +83,7 @@ async function currencyPage (req, res, next) {
       },
       chartBase,
       chartQuote,
-      canonical: SITE + '/currencies/' + lower + '/',
+      structuredData: jsonLd(breadcrumbs([['Home', '/'], ['Currencies', '/currencies/'], [nameOf(code), '/currencies/' + lower + '/']])),
       apiLatest: SITE + '/api/latest?base=' + code,
       apiDate: SITE + '/api/' + day + '?base=' + code + '&symbols=' + (code === 'USD' ? 'EUR,GBP' : 'USD,EUR')
     })
@@ -111,8 +113,7 @@ async function currencyIndex (req, res, next) {
       active: 'currencies',
       current: current.sort(byCode),
       stopped: stopped.sort(byCode),
-      dayLong: latest ? longDate(latest.date) : null,
-      canonical: SITE + '/currencies/'
+      dayLong: latest ? longDate(latest.date) : null
     })
   } catch (err) {
     next(err)

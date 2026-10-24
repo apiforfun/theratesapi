@@ -1,7 +1,6 @@
 {% extends 'pages/base.html' %}
-{% block title %}Currencies and their reference rates | The Rates API{% endblock %}
-{% block description %}Every currency The Rates API covers, where it is used, which central bank publishes it and its rate per euro{% if dayLong %} on {{ dayLong }}{% endif %}.{% endblock %}
-{% block head %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% set pageTitle %}Currencies and their reference rates | The Rates API{% endset %}
+{% set pageDescription %}Every currency The Rates API covers, where it is used, which central bank publishes it and its rate per euro{% if dayLong %} on {{ dayLong }}{% endif %}.{% endset %}
 {% block container %}
 <section class="pair-hero">
   <div class="container">
