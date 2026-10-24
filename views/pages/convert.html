@@ -1,0 +1,41 @@
+{% extends 'pages/base.html' %}
+{% block title %}Currency converter with official reference rates | The Rates API{% endblock %}
+{% block description %}Convert between {{ options | length }} currencies at the official reference rates published by the European Central Bank and Banca d'Italia. Free, with a one-year chart for every pair.{% endblock %}
+{% block head %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% block container %}
+<section class="pair-hero">
+  <div class="container">
+    <h1>Currency converter</h1>
+    <p class="section-lead">Convert between {{ options | length }} currencies at the latest official reference rates. Each pair has its own page with a one-year chart and the last 30 working days.</p>
+
+    <form class="convert-form" action="/convert/" method="get" data-convert>
+      <label>Amount
+        <input type="number" name="amount" min="0" step="any" inputmode="decimal" value="{{ amount }}">
+      </label>
+      <label>From
+        <select name="from">{% for c in options %}<option value="{{ c.code | lower }}"{% if c.code == from %} selected{% endif %}>{{ c.code }} {{ c.name }}</option>{% endfor %}</select>
+      </label>
+      <label>To
+        <select name="to">{% for c in options %}<option value="{{ c.code | lower }}"{% if c.code == to %} selected{% endif %}>{{ c.code }} {{ c.name }}</option>{% endfor %}</select>
+      </label>
+      <button class="button primary" type="submit">Convert</button>
+    </form>
+    {% if message %}<p class="form-message" role="alert">{{ message }}</p>{% endif %}
+    <div class="convert-result" data-convert-result aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="pair-section">
+  <div class="container">
+    <h2>Popular pairs</h2>
+    <h3 class="pairs-heading">Against the US dollar</h3>
+    <ul class="related">
+      {% for p in toUsd %}<li><a href="{{ p.path }}">{{ p.label }}</a></li>{% endfor %}
+    </ul>
+    <h3 class="pairs-heading">Against the euro</h3>
+    <ul class="related">
+      {% for p in toEur %}<li><a href="{{ p.path }}">{{ p.label }}</a></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

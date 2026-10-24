@@ -1,0 +1,103 @@
+{% extends 'pages/base.html' %}
+{% from 'pages/macros.html' import code_example, line_chart %}
+{% block title %}{{ from }} to {{ to }} exchange rate: 1 {{ from }} = {{ rateText }} {{ to }} | The Rates API{% endblock %}
+{% block description %}Convert {{ fromName }} to {{ toName }} at the reference rate of {{ dayLong }}: 1 {{ from }} = {{ rateText }} {{ to }}. One-year chart, the last 30 working days and a free API.{% endblock %}
+{% block head %}
+<link rel="canonical" href="{{ canonical }}">
+{% if not indexable %}<meta name="robots" content="noindex">{% endif %}
+{% endblock %}
+{% block container %}
+<section class="pair-hero">
+  <div class="container pair-hero-inner">
+    <div>
+      <h1>{{ from }} to {{ to }} exchange rate</h1>
+      <p class="pair-names">{{ fromName }} to {{ toName }}</p>
+      <p class="pair-figure">1 {{ from }} = <data value="{{ rate }}">{{ rateText }}</data> {{ to }}</p>
+      <p class="pair-inverse">1 {{ to }} = {{ inverseText }} {{ from }}</p>
+      <p class="pair-source">{{ attribution }}</p>
+    </div>
+
+    <div class="converter" data-rate="{{ rate }}" data-from="{{ from }}" data-to="{{ to }}">
+      <form action="" method="get">
+        <label for="amount">Amount in {{ from }}</label>
+        <div class="converter-row">
+          <input id="amount" type="number" name="amount" min="0" step="any" inputmode="decimal" value="{{ amount }}">
+          <span class="converter-code">{{ from }}</span>
+        </div>
+        <p class="converter-result"><output data-result>{{ amountText }}</output> {{ to }}</p>
+        <div class="converter-actions">
+          <button class="button ghost converter-submit" type="submit">Convert</button>
+          <a href="{{ inversePath }}">Swap to {{ to }} to {{ from }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="pair-section">
+  <div class="container">
+    <h2>{{ from }} to {{ to }} in common amounts</h2>
+    <div class="amounts">
+      <table class="sheet">
+        <thead><tr><th scope="col" class="num">{{ from }}</th><th scope="col" class="num">{{ to }}</th></tr></thead>
+        <tbody>
+          {% for row in amounts %}<tr><td class="num">{{ row.amount }}</td><td class="num">{{ row.there }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <table class="sheet">
+        <thead><tr><th scope="col" class="num">{{ to }}</th><th scope="col" class="num">{{ from }}</th></tr></thead>
+        <tbody>
+          {% for row in amounts %}<tr><td class="num">{{ row.amount }}</td><td class="num">{{ row.back }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="pair-section alt">
+  <div class="container">
+    <h2>One year of {{ from }} to {{ to }}</h2>
+    {{ line_chart(chart, from + ' to ' + to + ' from ' + chart.firstText + ' to ' + chart.lastText) }}
+    <dl class="chart-facts">
+      <div><dt>High</dt><dd>{{ chart.highText }}</dd><dd class="when">{{ chart.highDate }}</dd></div>
+      <div><dt>Low</dt><dd>{{ chart.lowText }}</dd><dd class="when">{{ chart.lowDate }}</dd></div>
+      {% for c in changes %}<div><dt>{{ c.label }}</dt><dd class="{{ c.direction }}">{{ c.text or 'Not enough history' }}</dd></div>
+      {% endfor %}
+    </dl>
+  </div>
+</section>
+
+<section class="pair-section">
+  <div class="container pair-columns">
+    <div>
+      <h2>Last 30 working days</h2>
+      <table class="sheet history">
+        <thead><tr><th scope="col">Date</th><th scope="col" class="num">1 {{ from }} in {{ to }}</th><th scope="col" class="num">Change</th></tr></thead>
+        <tbody>
+          {% for row in history %}<tr><td>{{ row.date }}</td><td class="num">{{ row.rate }}</td><td class="num change {{ row.direction }}">{{ row.change }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h2>Get this rate from the API</h2>
+      <p>Free, with no key. The latest rate:</p>
+      <div class="code-panel">{{ code_example('pair-latest', apiLatest) }}</div>
+      <p class="api-date">Or the rate on a given day:</p>
+      <div class="code-panel">{{ code_example('pair-date', apiDate) }}</div>
+    </div>
+  </div>
+</section>
+
+<section class="pair-section alt">
+  <div class="container">
+    <h2>Related</h2>
+    <p class="related-lead"><a href="{{ inversePath }}">{{ to }} to {{ from }}</a>, <a href="/currencies/{{ from | lower }}/">all about the {{ fromName }}</a> and <a href="/currencies/{{ to | lower }}/">the {{ toName }}</a>.</p>
+    <ul class="related">
+      {% for r in related %}<li><a href="{{ r.path }}">{{ from }} to {{ r.code }}</a></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

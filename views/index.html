@@ -1,14 +1,95 @@
 {% extends 'pages/base.html' %}
-{% from 'pages/macros.html' import code_example, icon_check %}
+{% from 'pages/macros.html' import code_example %}
+{% block head %}<script type="application/ld+json">{{ faqJson | safe }}</script>{% endblock %}
 {% block container %}
 <section class="hero">
   <div class="container hero-inner">
-    <div>
-      <h1>Free exchange rates API. <span>No key, no limits.</span></h1>
-      <p class="lead">Current and historical reference rates from the European Central Bank for 30 currencies, every working day since 1999.</p>
+    <div class="hero-text">
+      <h1>Free exchange rates API</h1>
+      <p class="lead">Official reference rates for {{ currencies | length if currencies | length else 'about 150' }} currencies, as published by the European Central Bank and Banca d'Italia on every working day since 1999.</p>
+      <p class="hero-note">No key, no signup. Any currency can be the base.</p>
       <div class="hero-actions">
-        <a class="button primary" href="/documentation/">Read the docs</a>
-        <a class="button ghost" href="https://github.com/apiforfun/theratesapi">View on GitHub</a>
+        <a class="button primary" href="#try">Try a request</a>
+        <a class="button ghost" href="/documentation/">Read the docs</a>
+      </div>
+    </div>
+
+    {% if sheet %}
+    <figure class="sheet-wrap">
+      <table class="sheet">
+        <caption>
+          <span class="sheet-head">
+            <span class="sheet-title">Euro reference rates</span>
+            <time datetime="{{ sheet.date }}">{{ sheet.longDate }}</time>
+          </span>
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Currency</th>
+            <th scope="col" class="num">1 EUR</th>
+            <th scope="col" class="num">Change</th>
+            <th scope="col" class="trend"><span class="visually-hidden">Last </span>30 days</th>
+            <th scope="col" class="src">By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in sheet.rows %}
+          <tr>
+            <th scope="row"><span class="code">{{ r.code }}</span> <span class="name">{{ r.name }}</span></th>
+            <td class="num">{{ r.rate }}</td>
+            <td class="num change {{ r.direction }}">{{ r.changeText }}</td>
+            <td class="trend"><svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polyline points="{{ r.trend }}"/></svg></td>
+            <td class="src">{% if r.source == 'ecb' %}<abbr title="European Central Bank">ECB</abbr>{% else %}<abbr title="Banca d'Italia">BdI</abbr>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <figcaption>Change is since the previous working day. <a href="/api/latest">All {{ currencies | length }} currencies as JSON</a></figcaption>
+    </figure>
+    {% endif %}
+  </div>
+</section>
+
+{% if summary %}
+<section class="sources">
+  <div class="container">
+    <h2>Where every number comes from</h2>
+    <p class="section-lead">Every rate is the figure a central bank published for that day. Rates for other bases are calculated from them.</p>
+    <div class="banks">
+      <div class="bank">
+        <h3><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html">European Central Bank</a></h3>
+        <p>Euro reference rates for {{ summary.ecb.currencies }} currencies, published in Frankfurt around 16:00 CET each working day.</p>
+        <dl>
+          <div><dt>First day</dt><dd>{{ summary.ecb.first }}</dd></div>
+          <div><dt>Latest</dt><dd>{{ summary.ecb.latest }}</dd></div>
+        </dl>
+      </div>
+      <div class="bank">
+        <h3><a href="https://tassidicambio.bancaditalia.it/">Banca d'Italia</a></h3>
+        <p>Daily rates against the euro for {{ summary.bdi.currencies }} more currencies, published in Rome after the ECB.</p>
+        <dl>
+          <div><dt>First day</dt><dd>{{ summary.bdi.first }}</dd></div>
+          <div><dt>Latest</dt><dd>{{ summary.bdi.latest }}</dd></div>
+        </dl>
+      </div>
+    </div>
+    <p class="totals">{{ summary.rates }} published rates on {{ summary.days }} working days. Where both banks publish a currency, the ECB's figure is used.</p>
+  </div>
+</section>
+{% endif %}
+
+<section class="try-section" id="try">
+  <div class="container try-inner">
+    <div class="try-text">
+      <h2>Try a request</h2>
+      <p>Two endpoints cover everything. Both return JSON and take the same two parameters.</p>
+      <dl class="endpoints">
+        <div><dt><code>GET /api/latest</code></dt><dd>The newest day both banks have published.</dd></div>
+        <div><dt><code>GET /api/2025-06-02</code></dt><dd>Any day since 1999. Weekends and holidays return the previous working day.</dd></div>
+      </dl>
+      <p>Add <code>base=USD</code> to quote against another currency and <code>symbols=GBP,JPY</code> to return only some. <a href="/documentation/">Read the full reference</a>.</p>
+      <div class="code-panel">
+        {{ code_example('home', 'https://theratesapi.com/api/latest?base=USD&symbols=EUR') }}
       </div>
     </div>
 
@@ -16,7 +97,7 @@
       <div class="try-controls">
         <label>Base
           <select name="base">
-            {% for code in currencies %}<option value="{{ code }}"{% if code == 'EUR' %} selected{% endif %}>{{ code }}</option>{% endfor %}
+            {% for code in codes %}<option value="{{ code }}"{% if code == 'EUR' %} selected{% endif %}>{{ code }}</option>{% endfor %}
           </select>
         </label>
         <label>Symbols
@@ -38,32 +119,27 @@
   </div>
 </section>
 
-<section class="facts" aria-label="Key facts">
-  <ul class="container">
-    <li>{{ icon_check() }} No signup or API key</li>
-    <li>{{ icon_check() }} 30 currencies, any base</li>
-    <li>{{ icon_check() }} History from 1999-01-04</li>
-    <li>{{ icon_check() }} Updated every working day, around 16:00 CET</li>
-  </ul>
+{% if currencies | length %}
+<section class="coverage" id="currencies">
+  <div class="container">
+    <h2>{{ currencies | length }} currencies, each one a possible base</h2>
+    <p class="section-lead">Every currency on the latest day. Retired ones, such as the Cypriot pound, still answer for the days they were published.</p>
+    <ul class="currency-grid">
+      {% for c in currencies %}<li class="currency"><a href="/currencies/{{ c.code | lower }}/"><span class="code">{{ c.code }}</span> {{ c.name }}</a></li>{% endfor %}
+    </ul>
+  </div>
 </section>
+{% endif %}
 
-<section class="endpoints">
-  <div class="container endpoints-inner">
-    <div>
-      <h2>Two endpoints. That's the whole API.</h2>
-      <div class="endpoint">
-        <code>GET /api/latest</code>
-        <p>The newest rates the ECB has published.</p>
-      </div>
-      <div class="endpoint">
-        <code>GET /api/2025-06-02</code>
-        <p>Rates for any day since 1999. Weekends and holidays return the previous working day.</p>
-      </div>
-      <p class="more">Add <code>?base=USD</code> to change the base and <code>?symbols=GBP,JPY</code> to filter. <a href="/documentation/">Read the full reference</a>.</p>
-    </div>
-    <div class="code-panel">
-      {{ code_example('home', 'https://theratesapi.com/api/latest?base=USD&symbols=EUR') }}
-    </div>
+<section class="faq">
+  <div class="container">
+    <h2>Questions</h2>
+    {% for item in faq %}
+    <details>
+      <summary>{{ item.question }}</summary>
+      <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
   </div>
 </section>
 {% endblock %}
