@@ -1,0 +1,49 @@
+{% extends 'pages/base.html' %}
+{% block title %}Currencies and their reference rates | The Rates API{% endblock %}
+{% block description %}Every currency The Rates API covers, where it is used, which central bank publishes it and its rate per euro{% if dayLong %} on {{ dayLong }}{% endif %}.{% endblock %}
+{% block head %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% block container %}
+<section class="pair-hero">
+  <div class="container">
+    <h1>Currencies</h1>
+    <p class="section-lead">{{ current | length }} currencies with official reference rates{% if dayLong %} on {{ dayLong }}{% endif %}, published by the European Central Bank and Banca d'Italia. Each one has its own page with rates against the most used currencies and a one-year chart.</p>
+  </div>
+</section>
+
+<section class="pair-section">
+  <div class="container">
+    <table class="sheet currency-index">
+      <thead>
+        <tr><th scope="col">Currency</th><th scope="col" class="used">Used in</th><th scope="col" class="src">Published by</th><th scope="col" class="num">Per 1 EUR</th></tr>
+      </thead>
+      <tbody>
+        {% for c in current %}<tr>
+          <th scope="row"><a href="{{ c.path }}"><span class="code">{{ c.code }}</span> {{ c.name }}</a></th>
+          <td class="used">{{ c.usedIn or '' }}</td>
+          <td class="src">{{ c.publisher }}</td>
+          <td class="num">{{ c.rate or 'No rate today' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="pair-section alt" id="no-longer-published">
+  <div class="container">
+    <h2>No longer published</h2>
+    <p class="section-lead">Currencies that were replaced or that the banks stopped publishing. Their history is still available for the days they were published.</p>
+    <table class="sheet stopped">
+      <thead><tr><th scope="col">Currency</th><th scope="col">First day</th><th scope="col">Last published</th></tr></thead>
+      <tbody>
+        {% for c in stopped %}<tr>
+          <th scope="row"><a href="{{ c.path }}"><span class="code">{{ c.code }}</span> {{ c.name }}</a></th>
+          <td>{{ c.first }}</td>
+          <td>{{ c.last }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

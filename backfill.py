@@ -13,9 +13,11 @@ DATABASE_URL = os.environ['DATABASE_URL']
 ECB_HIST_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip'
 SCHEMA_PATH  = Path(__file__).parent / 'db' / 'schema.sql'
 
+# The ECB's rate replaces any other source's row for the same day and currency, never the reverse.
 INSERT_SQL = '''
-    INSERT INTO ecb_rates (date, currency, rate) VALUES (%s, %s, %s)
-    ON CONFLICT (date, currency) DO NOTHING
+    INSERT INTO rates (date, currency, rate, source) VALUES (%s, %s, %s, 'ecb')
+    ON CONFLICT (date, currency) DO UPDATE SET rate = EXCLUDED.rate, source = 'ecb'
+    WHERE rates.source <> 'ecb'
 '''
 
 

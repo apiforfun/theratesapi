@@ -1,0 +1,76 @@
+{% extends 'pages/base.html' %}
+{% from 'pages/macros.html' import code_example, line_chart %}
+{% block title %}{{ name }} ({{ code }}) exchange rates: {{ titleFigure }} | The Rates API{% endblock %}
+{% block description %}{{ titleFigure }} on {{ dayLong }}. {{ name }} ({{ code }}) against the world's most used currencies, with a one-year chart. Official reference rates published by {{ publisher }}, free through an API.{% endblock %}
+{% block head %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% block container %}
+<section class="pair-hero">
+  <div class="container pair-hero-inner">
+    <div>
+      <h1>{{ name }} ({{ code }})</h1>
+      {% if current %}
+      <p class="pair-names">Reference rates published by {{ publisher }} every working day.</p>
+      {% else %}
+      <p class="pair-names">Last published on {{ last }}. The rates below are from that day.</p>
+      {% endif %}
+      {% if code != 'EUR' %}<p class="pair-figure">1 {{ code }} = {{ inEur }} EUR</p>{% endif %}
+      {% if code != 'USD' and inUsd %}<p class="pair-inverse">1 {{ code }} = {{ inUsd }} USD</p>{% endif %}
+      <p class="pair-source">{% if code == 'EUR' %}The euro is the base of every rate here: each bank publishes how much of a currency one euro buys.{% else %}Rates against other currencies are calculated from the euro rates published by {{ calculatedFrom }} on {{ dayLong }}.{% endif %}</p>
+    </div>
+    <dl class="facts-list">
+      {% if usedIn %}<div><dt>Used in</dt><dd>{{ usedIn }}</dd></div>{% endif %}
+      <div><dt>Published by</dt><dd>{{ publisherName }}</dd></div>
+      <div><dt>First day</dt><dd>{{ first }}</dd></div>
+      <div><dt>{{ 'Latest' if current else 'Last published' }}</dt><dd>{{ last }}</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="pair-section">
+  <div class="container">
+    <h2>{{ code }} against the most used currencies</h2>
+    <table class="sheet versus">
+      <thead>
+        <tr><th scope="col">Currency</th><th scope="col" class="num">1 {{ code }} buys</th><th scope="col" class="num">1 of it buys</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}<tr>
+          <th scope="row"><span class="code">{{ r.code }}</span> <span class="name">{{ r.name }}</span></th>
+          <td class="num">{% if r.toPath %}<a href="{{ r.toPath }}">{{ r.to }} {{ r.code }}</a>{% else %}{{ r.to }} {{ r.code }}{% endif %}</td>
+          <td class="num">{% if r.fromPath %}<a href="{{ r.fromPath }}">{{ r.from }} {{ code }}</a>{% else %}{{ r.from }} {{ code }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if chart %}
+<section class="pair-section alt">
+  <div class="container">
+    <h2>One year of 1 {{ chartBase }} in {{ chartQuote }}</h2>
+    {{ line_chart(chart, '1 ' + chartBase + ' in ' + chartQuote + ' from ' + chart.firstText + ' to ' + chart.lastText) }}
+    <dl class="chart-facts">
+      <div><dt>High</dt><dd>{{ chart.highText }}</dd><dd class="when">{{ chart.highDate }}</dd></div>
+      <div><dt>Low</dt><dd>{{ chart.lowText }}</dd><dd class="when">{{ chart.lowDate }}</dd></div>
+    </dl>
+  </div>
+</section>
+{% endif %}
+
+<section class="pair-section">
+  <div class="container pair-columns">
+    <div>
+      <h2>Get {{ code }} rates from the API</h2>
+      <p>Free, with no key. Every rate against {{ code }}{% if not current %} on its last published day{% endif %}:</p>
+      <div class="code-panel">{{ code_example('currency-latest', apiLatest) }}</div>
+    </div>
+    <div>
+      <h2 class="visually-hidden">A given day</h2>
+      <p class="api-date">Or a few currencies on a given day:</p>
+      <div class="code-panel">{{ code_example('currency-date', apiDate) }}</div>
+      <p><a href="/currencies/">All currencies</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

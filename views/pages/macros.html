@@ -24,3 +24,14 @@ data = requests.get('{{ url }}').json()</pre>
   {% endif %}
 </div>
 {% endmacro %}
+
+{% macro line_chart(chart, label) %}
+<figure class="chart-wrap">
+  <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ label }}">
+    <polyline points="{{ chart.points }}"/>
+    <circle class="mark" cx="{{ chart.high.x }}" cy="{{ chart.high.y }}" r="4"/>
+    <circle class="mark" cx="{{ chart.low.x }}" cy="{{ chart.low.y }}" r="4"/>
+  </svg>
+  <figcaption class="chart-axis"><span>{{ chart.firstText }}</span><span>{{ chart.lastText }}</span></figcaption>
+</figure>
+{% endmacro %}

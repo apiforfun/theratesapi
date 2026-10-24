@@ -1,17 +1,21 @@
 const db = require('../config/db')
 
-// Rates for $1 (base) on the newest ECB publication day on or before $2 (null = latest)
-// on which that base was published. ECB rates are units per 1 EUR, so EUR is added as 1
+// Rates for $1 (base) on the newest publication day on or before $2 (null = latest) on
+// which that base was published. Stored rates are units per 1 EUR, so EUR is added as 1
 // and every cross-rate is target / base, rounded half-up to 6 decimals. $1 is compared as
 // bpchar so the (currency, date) index applies; to_char keeps the date ISO whatever DateStyle is.
+// Banca d'Italia publishes after the ECB, so the current UTC day only counts once it has rows
+// from Banca d'Italia. If it hasn't published by midnight UTC, the day appears with the ECB's.
 const RATES_SQL = `
 WITH day AS (
-  SELECT max(date) AS date FROM ecb_rates
-  WHERE ($1::text = 'EUR' OR currency = $1::bpchar)
-    AND date <= coalesce($2::date, 'infinity')
+  SELECT max(r.date) AS date FROM rates r
+  WHERE ($1::text = 'EUR' OR r.currency = $1::bpchar)
+    AND r.date <= coalesce($2::date, 'infinity')
+    AND (r.date < (now() AT TIME ZONE 'UTC')::date
+      OR EXISTS (SELECT 1 FROM rates b WHERE b.date = r.date AND b.source = 'bdi'))
 ),
 quotes AS (
-  SELECT r.date, r.currency, r.rate FROM ecb_rates r JOIN day USING (date)
+  SELECT r.date, r.currency, r.rate FROM rates r JOIN day USING (date)
   UNION ALL
   SELECT date, 'EUR', 1 FROM day WHERE date IS NOT NULL
 )

@@ -1,5 +1,7 @@
 const { fetchRates } = require('./api')
 const currencyNames = require('./currencies')
+const { rateSheet, sourceSummary, FAQ } = require('./home')
+const { longDate, shortDate, changeText } = require('./format')
 
 // Codes published on the latest day, EUR included, sorted.
 async function latestCurrencies () {
@@ -7,21 +9,63 @@ async function latestCurrencies () {
   return all ? ['EUR', ...Object.keys(all.rates)].sort() : ['EUR']
 }
 
-// Pages still render when the database is down; the live examples are simply left out.
+// A code a source adds before currencies.js knows it is listed under its code.
+function named (codes) {
+  return codes.map(function (code) { return { code, name: currencyNames[code] || code } })
+}
+
+function sheetView (sheet) {
+  return {
+    date: sheet.date,
+    longDate: longDate(sheet.date),
+    rows: sheet.rows.map(function (row) {
+      const direction = row.change > 0 ? 'up' : row.change < 0 ? 'down' : 'flat'
+      return { ...row, direction, changeText: changeText(row.change) }
+    })
+  }
+}
+
+function summaryView (summary) {
+  const view = { rates: summary.rates.toLocaleString('en-GB'), days: summary.days.toLocaleString('en-GB') }
+  for (const source of ['ecb', 'bdi']) {
+    const s = summary[source]
+    if (s) view[source] = { currencies: s.currencies, first: shortDate(s.first), latest: shortDate(s.latest) }
+  }
+  return view
+}
+
+// The FAQ as schema.org data; '<' is escaped so the JSON can't close its script tag.
+const FAQ_JSON = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map(function (item) {
+    return { '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } }
+  })
+}).replace(/</g, '\\u003c')
+
+// Pages still render when the database is down; the live examples and data sections are left out.
 async function index (req, res) {
   let example = null
-  let currencies = ['EUR']
+  let codes = ['EUR']
+  let sheet = null
+  let summary = null
   try {
-    const [result, codes] = await Promise.all([
+    const [result, latestCodes, latestSheet] = await Promise.all([
       fetchRates('EUR', null, ['USD', 'GBP', 'JPY']),
-      latestCurrencies()
+      latestCurrencies(),
+      rateSheet()
     ])
     example = result
-    currencies = codes
+    codes = latestCodes
+    if (latestSheet) {
+      sheet = sheetView(latestSheet)
+      summary = summaryView(await sourceSummary(latestSheet.date))
+    }
   } catch (err) {
     console.error('Home page examples failed', err)
   }
-  res.render('index.html', { active: 'home', example, currencies })
+  const currencies = codes.length > 1 ? named(codes) : []
+  res.render('index.html', { active: 'home', example, codes, currencies, sheet, summary, faq: FAQ, faqJson: FAQ_JSON })
 }
 
 async function documentation (req, res) {
@@ -36,7 +80,7 @@ async function documentation (req, res) {
     ])
     latest = latestResult
     historical = historicalResult
-    currencies = codes.map(function (code) { return { code, name: currencyNames[code] } })
+    currencies = named(codes)
   } catch (err) {
     console.error('Documentation examples failed', err)
   }

@@ -1,8 +1,8 @@
 # the foreign exchange rates by The Rates API
 
-theratesapi is a free API for present and historical foreign exchange rates. We developed this service by reading public data from [European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html).
+theratesapi is a free API for present and historical foreign exchange rates. We developed this service by reading public data from the [European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html) and [Banca d'Italia](https://tassidicambio.bancaditalia.it/). Responses cover about 150 currencies; the examples below show only the ECB's.
 
-**Note**: The reference rates are usually updated around 16:00 CET on every working day.
+**Note**: ECB rates are published around 16:00 CET and Banca d'Italia's after them on every working day; a new day appears in the API once both are in.
 
 ## Usage
 

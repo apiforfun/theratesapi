@@ -116,9 +116,59 @@
     links.forEach(function (link) { observer.observe(document.querySelector(link.hash)) })
   }
 
+  // Pair pages: the converted amount follows the input, from the rate already on the page.
+  function initConverter () {
+    const format = new Intl.NumberFormat('en-GB', { maximumSignificantDigits: 6 })
+    document.querySelectorAll('.converter[data-rate]').forEach(function (box) {
+      const rate = Number(box.dataset.rate)
+      const input = box.querySelector('input[name=amount]')
+      const result = box.querySelector('[data-result]')
+      input.addEventListener('input', function () {
+        const amount = Number(input.value)
+        result.textContent = input.value !== '' && amount >= 0 ? format.format(amount * rate) : ''
+      })
+    })
+  }
+
+  // Converter page: shows the result in place from the euro rates of both currencies, so small
+  // cross-rates keep their digits. Without JS (or if the request fails) the form goes to the pair page.
+  function initConvertForm () {
+    const form = document.querySelector('[data-convert]')
+    if (!form) return
+    const output = document.querySelector('[data-convert-result]')
+    const format = new Intl.NumberFormat('en-GB', { maximumSignificantDigits: 6 })
+    form.addEventListener('submit', function (event) {
+      const from = form.elements.from.value.toUpperCase()
+      const to = form.elements.to.value.toUpperCase()
+      const amount = Number(form.elements.amount.value || 1)
+      if (from === to || !(amount >= 0)) return
+      event.preventDefault()
+      const symbols = [from, to].filter(function (code) { return code !== 'EUR' }).join(',')
+      fetch('/api/latest?symbols=' + symbols).then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status)
+        return res.json()
+      }).then(function (data) {
+        const perEur = Object.assign({ EUR: 1 }, data.rates)
+        const rate = perEur[to] / perEur[from]
+        if (!(rate > 0)) throw new Error('missing rate')
+        const path = '/convert/' + from.toLowerCase() + '-to-' + to.toLowerCase() + '/'
+        output.innerHTML = ''
+        const result = document.createElement('p')
+        result.className = 'convert-figure'
+        result.textContent = format.format(amount) + ' ' + from + ' = ' + format.format(amount * rate) + ' ' + to
+        const link = document.createElement('a')
+        link.href = path
+        link.textContent = 'See the ' + from + ' to ' + to + ' chart and history'
+        output.append(result, link)
+      }).catch(function () { form.submit() })
+    })
+  }
+
   initMenu()
   initTabs()
   initCopy()
   initTry()
+  initConverter()
+  initConvertForm()
   initScrollSpy()
 })()

@@ -4,13 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}The Rates API: free exchange rates API{% endblock %}</title>
-  <meta name="description" content="{% block description %}Free foreign exchange rates API with current and historical European Central Bank reference rates since 1999. No API key.{% endblock %}">
+  <meta name="description" content="{% block description %}Free foreign exchange rates API with current and historical reference rates for about 150 currencies from the European Central Bank and Banca d'Italia since 1999. No API key.{% endblock %}">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/barlow-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css?v={{ assetVersion }}">
   <script>document.documentElement.className = 'js'</script>
   <script defer src="/js/highlight.js?v={{ assetVersion }}"></script>
   <script defer src="/js/site.js?v={{ assetVersion }}"></script>
+{% block head %}{% endblock %}
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -25,6 +26,8 @@
     </button>
     <nav id="site-nav" class="site-nav" aria-label="Main">
       <a href="/documentation/"{% if active == 'docs' %} aria-current="page"{% endif %}>Docs</a>
+      <a href="/convert/"{% if active == 'convert' %} aria-current="page"{% endif %}>Converter</a>
+      <a href="/currencies/"{% if active == 'currencies' %} aria-current="page"{% endif %}>Currencies</a>
       <a href="https://github.com/apiforfun/theratesapi">GitHub</a>
       <a href="mailto:apiforfun2@gmail.com">Contact</a>
     </nav>
@@ -34,16 +37,38 @@
 {% block container %}{% endblock %}
 </main>
 <footer class="site-footer">
-  <div class="container footer-inner">
-    <p>Data: <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html">European Central Bank</a></p>
-    <nav aria-label="Footer">
-      <a href="/documentation/">Docs</a>
-      <a href="https://github.com/apiforfun/theratesapi">GitHub</a>
-      <a href="https://github.com/apiforfun/theratesapi/issues">Report an issue</a>
-      <a href="/privacy-policy/"{% if active == 'privacy' %} aria-current="page"{% endif %}>Privacy</a>
-      <a href="/terms-and-conditions/"{% if active == 'terms' %} aria-current="page"{% endif %}>Terms</a>
-      <a href="mailto:apiforfun2@gmail.com">Contact</a>
-    </nav>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-about">
+        <a class="brand" href="/">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h15M14 4l4 4-4 4M21 16H6M10 12l-4 4 4 4"/></svg>
+          <span>The <b>Rates</b> API</span>
+        </a>
+        <p>A free, open-source API for the euro reference rates published by central banks.</p>
+      </div>
+      <nav aria-label="API">
+        <h2>API</h2>
+        <a href="/documentation/">Documentation</a>
+        <a href="/documentation/#latest">Latest rates</a>
+        <a href="/documentation/#historical">Historical rates</a>
+        <a href="/convert/">Currency converter</a>
+        <a href="/currencies/">Currencies</a>
+      </nav>
+      <nav aria-label="Data sources">
+        <h2>Data</h2>
+        <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html">European Central Bank</a>
+        <a href="https://tassidicambio.bancaditalia.it/">Banca d'Italia</a>
+      </nav>
+      <nav aria-label="Project">
+        <h2>Project</h2>
+        <a href="https://github.com/apiforfun/theratesapi">GitHub</a>
+        <a href="https://github.com/apiforfun/theratesapi/issues">Report an issue</a>
+        <a href="mailto:apiforfun2@gmail.com">Contact</a>
+        <a href="/privacy-policy/"{% if active == 'privacy' %} aria-current="page"{% endif %}>Privacy</a>
+        <a href="/terms-and-conditions/"{% if active == 'terms' %} aria-current="page"{% endif %}>Terms</a>
+      </nav>
+    </div>
+    <p class="footer-note">Reference rates are for information only. They are not the rates offered by banks or payment providers.</p>
   </div>
 </footer>
 </body>

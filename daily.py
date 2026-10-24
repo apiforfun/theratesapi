@@ -9,9 +9,11 @@ import requests
 DATABASE_URL = os.environ['DATABASE_URL']
 ECB_XML_URL  = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
 
+# The ECB's rate replaces any other source's row for the same day and currency, never the reverse.
 INSERT_SQL = '''
-    INSERT INTO ecb_rates (date, currency, rate) VALUES (%s, %s, %s)
-    ON CONFLICT (date, currency) DO NOTHING
+    INSERT INTO rates (date, currency, rate, source) VALUES (%s, %s, %s, 'ecb')
+    ON CONFLICT (date, currency) DO UPDATE SET rate = EXCLUDED.rate, source = 'ecb'
+    WHERE rates.source <> 'ecb'
 '''
 
 
