@@ -94,15 +94,30 @@ test('legal pages are the plain-language versions', async function () {
     const { html } = await get(LIVE, urlPath)
     assert.match(html, new RegExp('<h1>' + heading + '</h1>'), urlPath)
     assert.match(html, /Last updated 24 October 2026/, urlPath)
-    assert.doesNotMatch(html, /DEVELOPER NAME|Mastercard|Google Analytics/, urlPath)
+    assert.doesNotMatch(html, /DEVELOPER NAME|Mastercard/, urlPath)
   }
 })
 
-test('no page loads third-party scripts, styles or fonts', async function () {
+test('privacy policy discloses Google Analytics and its cookies', async function () {
+  const { html } = await get(LIVE, '/privacy-policy/')
+  assert.match(html, /Google Analytics/)
+  assert.match(html, /cookies/)
+  assert.doesNotMatch(html, /sets no cookies|no analytics|has no analytics/)
+})
+
+test('every page loads the Google tag', async function () {
+  for (const urlPath of ['/', '/documentation/', '/privacy-policy/', '/terms-and-conditions/', '/nope', '/convert/', '/convert/usd-to-inr/', '/currencies/inr/', '/currencies/']) {
+    const { html } = await get(LIVE, urlPath)
+    assert.match(html, /<script async src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-BGQKLYTT79"><\/script>/, urlPath)
+    assert.match(html, /gtag\('config', 'G-BGQKLYTT79'\)/, urlPath)
+  }
+})
+
+test('no page loads third-party scripts, styles or fonts other than the Google tag', async function () {
   for (const urlPath of ['/', '/documentation/', '/privacy-policy/', '/terms-and-conditions/', '/nope', '/convert/usd-to-inr/', '/currencies/inr/', '/currencies/']) {
     const { html } = await get(LIVE, urlPath)
     // A canonical link names our own address; it loads nothing.
-    assert.doesNotMatch(html, /<(script|link)\b(?![^>]*rel="canonical")[^>]*\b(src|href)="(https?:)?\/\//, urlPath)
+    assert.doesNotMatch(html, /<(script|link)\b(?![^>]*rel="canonical")(?![^>]*src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?)[^>]*\b(src|href)="(https?:)?\/\//, urlPath)
   }
 })
 

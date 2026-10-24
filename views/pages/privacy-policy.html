@@ -1,12 +1,12 @@
 {% extends 'pages/base.html' %}
 {% block title %}Privacy policy | The Rates API{% endblock %}
-{% block description %}What The Rates API logs, why, and for how long. No accounts, cookies, analytics or third-party scripts.{% endblock %}
+{% block description %}What The Rates API logs, why, and for how long, and how the website uses Google Analytics. No accounts, and the API itself is not tracked.{% endblock %}
 {% block container %}
 <section class="page container">
   <h1>Privacy policy</h1>
   <p class="updated">Last updated 24 October 2026</p>
 
-  <p>The Rates API has no accounts, sets no cookies, and runs no analytics or third-party scripts. The only personal data we handle is what any web server sees when you make a request.</p>
+  <p>The Rates API has no accounts. The website uses Google Analytics to count visits; the API itself is not tracked. Apart from that, the only personal data we handle is what any web server sees when you make a request.</p>
 
   <h2>What we log</h2>
   <p>When you visit the site or call the API, our web server records the request in an access log: your IP address, the date and time, the URL you requested (including any query parameters), and request headers such as your browser's user agent and the page that linked you here.</p>
@@ -22,7 +22,10 @@
   <p>We don't sell or share the logs. We would only disclose them if the law required us to.</p>
 
   <h2>Cookies and tracking</h2>
-  <p>The site sets no cookies, has no analytics, and loads no scripts, fonts or other files from other companies.</p>
+  <p>The website uses Google Analytics to see how many people visit and which pages they read. When you open a page, your browser loads a script from Google, which sets cookies (<code>_ga</code> and <code>_ga_BGQKLYTT79</code>) and sends Google the address of the page, the page that linked you here, your browser and device type, and your approximate location, which Google works out from your IP address. We see reports and totals, not individual visitors. Google handles this data as described in <a href="https://policies.google.com/technologies/partner-sites">how Google uses information from sites that use its services</a>.</p>
+  <p>API calls are not tracked: API responses load no scripts and set no cookies.</p>
+  <p>To opt out, block cookies for theratesapi.com in your browser, or install Google's <a href="https://tools.google.com/dlpage/gaoptout">Analytics opt-out browser add-on</a>.</p>
+  <p>Apart from that script, the site loads no scripts, fonts or other files from other companies.</p>
 
   <h2>Where the service runs</h2>
   <p>The Rates API is hosted on Amazon Web Services in the United States. The exchange rates come from the <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html">European Central Bank</a> and <a href="https://tassidicambio.bancaditalia.it/">Banca d'Italia</a>; we don't send them anything about you.</p>
